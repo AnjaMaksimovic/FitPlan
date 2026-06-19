@@ -1,46 +1,36 @@
-# FitPlan — Domain-Specific Language for Nutrition and Training Planning
+# FitPlan - Domain-Specific Language for Nutrition and Training Planning
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 1. Project Description
 
-FitPlan is a domain-specific language (DSL) designed for planning weekly nutrition and training programs. The language is implemented using the textX library for grammar definition and parsing, while Jinja2 is used for output generation.
+FitPlan is a domain-specific language (DSL) designed for intelligent weekly nutrition and training planning. The language is implemented using the textX library for grammar definition and parsing, while Jinja2 is used for output generation.
 
-Instead of manually tracking calories in spreadsheets or using rigid meal planning apps, users can write a simple `.fitplan` script that describes their ingredients, recipes, meals, and weekly plans. The system then automatically calculates nutritional values, compares daily intake against goals, and generates useful outputs — styled HTML pages, nutritional reports, shopping lists, and Markdown schedules.
+Instead of manually tracking calories in spreadsheets or using rigid meal planning apps, users can write a simple `.fitplan` script that describes their recipes, meal options, workouts, and goals. The system then automatically:
+
+- **Fetches nutritional data** from a built-in database of 60+ ingredients or the OpenFoodFacts API - no need to manually enter calories, protein, carbs, or fat
+- **Generates a weekly meal plan** by distributing meal options across 7 days with smart filters (e.g. no repeating the same protein source for lunch and dinner)
+- **Calculates workout calories** automatically using MET (Metabolic Equivalent of Task) values based on workout type, duration, and intensity
+- **Produces interactive outputs** - HTML pages, nutritional reports, shopping lists, and a progress tracker where users log meals and workouts in real-time
 
 The target users are fitness enthusiasts, nutritionists, and anyone who wants to plan their diet and training in a structured, reproducible way without writing code or using complex tools.
 
 ## 2. Technologies
 
-- **Python 3.12+** — primary implementation language
-- **textX** — grammar definition and parsing
-- **Jinja2** — template engine for output generation
-- **pygls** — Language Server Protocol for VS Code support
-- **TypeScript** — VS Code extension
+- **Python 3.12+** - primary implementation language
+- **textX** - grammar definition and parsing
+- **Jinja2** - template engine for output generation
+- **OpenFoodFacts API** - automatic nutritional data lookup with local caching
+- **pygls** - Language Server Protocol for VS Code support
+- **TypeScript** - VS Code extension
 
 ## 3. Syntax Example
 
-### Basic example — defining an ingredient and a recipe
+### Defining recipes (no manual nutritional values needed)
 
 ```
-ingredient ChickenBreast {
-    per 100g
-    calories 165 kcal
-    protein 31 g
-    carbs 0 g
-    fat 3.6 g
-    category meat
-}
-
-ingredient Broccoli {
-    per 100g
-    calories 34 kcal
-    protein 2.8 g
-    carbs 6.6 g
-    fat 0.4 g
-    fiber 2.6 g
-    category vegetable
-}
+// No need to define ingredients - the system knows that
+// ChickenBreast has 165 kcal, 31g protein per 100g
 
 recipe ChickenWithBroccoli {
     serves 2
@@ -49,6 +39,7 @@ recipe ChickenWithBroccoli {
     ingredients {
         ChickenBreast 300 g
         Broccoli 250 g
+        OliveOil 15 ml
     }
     steps {
         step "Cut chicken into cubes" duration 5 min
@@ -57,24 +48,95 @@ recipe ChickenWithBroccoli {
     }
     tags [highProtein, lowCarb]
 }
+
+recipe SalmonWithQuinoa {
+    serves 2
+    time 40 min
+    difficulty medium
+    ingredients {
+        Salmon 300 g
+        Quinoa 150 g
+        Spinach 100 g
+    }
+    steps {
+        step "Cook quinoa" duration 15 min
+        step "Bake salmon" duration 15 min temperature 200 C
+        step "Serve together with spinach"
+    }
+    tags [highProtein, omega3]
+}
+
+recipe TofuStirFry {
+    serves 2
+    time 25 min
+    difficulty medium
+    ingredients {
+        Tofu 300 g
+        BellPepper 150 g
+        BrownRice 200 g
+    }
+    steps {
+        step "Cook rice" duration 20 min
+        step "Fry tofu and peppers" duration 10 min temperature 180 C
+    }
+    tags [vegan, highFiber]
+}
 ```
 
-### Full example — weekly weight loss plan
+### Defining meal options (system distributes automatically)
 
 ```
-meal Lunch {
-    ChickenWithBroccoli servings 1
+options breakfast_options {
+    OatmealBowl
+    EggsWithAvocado
+    GreekYogurtBowl
 }
 
-meal Dinner {
-    SalmonWithQuinoa servings 1
+options lunch_options {
+    ChickenWithBroccoli
+    SalmonWithQuinoa
+    TofuStirFry
 }
 
-meal Breakfast {
-    OatmealWithBanana servings 1
+options dinner_options {
+    SalmonWithQuinoa
+    TofuStirFry
+    ChickenWithBroccoli
+}
+```
+
+### Defining workouts (calories calculated automatically)
+
+```
+// No need to specify calories burned - the system calculates
+// using MET values: weightlifting/high/60min = ~420 kcal
+
+workout StrengthTraining {
+    type weightlifting
+    duration 60 min
+    intensity high
+    days [Monday, Wednesday, Friday]
 }
 
-plan WeeklyWeightLoss {
+workout CardioRun {
+    type running
+    duration 30 min
+    intensity medium
+    days [Tuesday, Thursday]
+}
+
+workout YogaSession {
+    type yoga
+    duration 45 min
+    intensity low
+    days [Saturday]
+}
+```
+
+### Creating a plan (no manual day-by-day scheduling)
+
+```
+plan WeightLossPlan {
     goal weightLoss
     target_calories 1800 kcal
     target_macros {
@@ -82,57 +144,91 @@ plan WeeklyWeightLoss {
         carbs 30 %
         fat 30 %
     }
-    day Monday {
-        breakfast Breakfast
-        lunch Lunch
-        dinner Dinner
-        workout running 45 min intensity medium burns 400 kcal
+    meals {
+        breakfast from breakfast_options
+        lunch from lunch_options
+        dinner from dinner_options
     }
-    day Tuesday {
-        breakfast Breakfast
-        lunch Lunch
-        dinner Dinner
-        workout weightlifting 60 min intensity high burns 350 kcal
-    }
-    day Wednesday {
-        breakfast Breakfast
-        lunch Dinner
-        dinner Lunch
-        workout yoga 30 min intensity low burns 150 kcal
+    filters {
+        no_repeat_same_day
+        max_per_week ChickenWithBroccoli 3
     }
 }
 ```
 
+The system automatically generates a 7-day plan, choosing different meals for each day while respecting the filters.
+
 ## 4. Language Concepts
 
-The language supports four core concepts that reference each other:
+The language supports five core concepts:
 
-**`ingredient`** — defines a food item with nutritional values per 100g/100ml (calories, protein, carbs, fat, fiber), optional allergens and category (meat, fish, dairy, vegetable, fruit, grain, legume, fat, sweetener, other).
+| Concept | Description | Key Feature |
+|---|---|---|
+| `ingredient` | Custom food item with nutritional values | **Optional** - 60+ built-in ingredients + API lookup |
+| `recipe` | Preparation using ingredients with steps | References ingredients by name - system resolves nutritional data |
+| `options` | Meal variations per meal type | System auto-distributes across 7 days |
+| `workout` | Training session with day assignments | Calories auto-calculated via MET table |
+| `plan` | Weekly plan with goals and filters | No manual day-by-day scheduling needed |
 
-**`recipe`** — defines a recipe that references previously defined ingredients with amounts in various units (g, kg, ml, l, tbsp, tsp, piece). Includes step-by-step preparation instructions with optional duration and temperature.
+### Ingredient Resolution
 
-**`meal`** — combines one or more recipes with specified serving counts into a single meal (breakfast, lunch, dinner, snack).
+When a recipe references an ingredient, the system resolves nutritional data in this order:
+1. **Custom ingredients** defined in the `.fitplan` file (if any)
+2. **Built-in database** — 60+ common ingredients with verified nutritional values
+3. **OpenFoodFacts API** — automatic online lookup with local caching for future use
 
-**`plan`** — defines a weekly nutrition and training plan. Contains a goal (weightLoss, muscleGain, maintenance, endurance), target daily calories, macronutrient distribution (must sum to 100%), and a day-by-day schedule of meals and workouts.
+### Workout Calorie Calculation
+
+Calories burned are calculated using the MET (Metabolic Equivalent of Task) formula:
+
+```
+Calories = MET × body_weight_kg × duration_hours
+```
+
+MET values are based on the Compendium of Physical Activities (Ainsworth et al.), the same source used by fitness apps like MyFitnessPal and Fitbit.
+
+### Smart Filters
+
+Filters control how meals are distributed across the week:
+
+| Filter | Description |
+|---|---|
+| `no_repeat_same_day` | Don't use same protein source for lunch and dinner on the same day |
+| `max_per_week RecipeName N` | Limit a recipe to N appearances per week |
 
 ## 5. Generators
 
-**HTML** — styled web page with recipe cards (nutritional summary, ingredients, preparation steps) and weekly plan overview with macronutrient charts.
+| Generator | Description |
+|---|---|
+| HTML | Styled web page with recipe cards and auto-generated weekly plan |
+| Nutrition Report | Daily calorie and macro comparison against targets with ✅⬇️⬆️ indicators |
+| Shopping List | Aggregated ingredients for the week, grouped by category, with interactive checkboxes |
+| Markdown | Weekly schedule with recipes, workouts, and summary statistics |
+| Progress Tracker | Interactive HTML where users log meals, track workouts, add extra food, and get activity suggestions for calorie overages |
 
-**Nutrition Report** — detailed table comparing actual daily calorie and macronutrient intake against plan targets, with indicators showing whether each day is on target, below, or above.
+### Progress Tracker Features
 
-**Shopping List** — aggregates all ingredients from the entire weekly plan, sums quantities of the same ingredient across different recipes and days, and groups them by category. Interactive HTML with checkboxes.
-
-**Markdown** — weekly schedule in Markdown format with all recipes, daily meal tables, workout details, and weekly summary statistics.
+The progress tracker generates an interactive HTML page where users can:
+- Check off completed meals and workouts
+- Add unplanned extra meals with calorie counts
+- See a real-time daily calorie balance bar (green = on target, red = over)
+- Get automatic activity suggestions when exceeding the target (e.g. "Over by 200 kcal - try 23 min moderate running to compensate")
+- View weekly summary statistics (total meals logged, workouts completed, average daily calories)
 
 ## 6. Validations
 
-- Macronutrient percentages (protein + carbs + fat) must sum to exactly 100%
-- Target calorie intake must be at least 1000 kcal
-- Nutritional values cannot be negative
-- Each recipe must have at least one ingredient and one preparation step
-- The same day cannot appear twice in a plan
-- Warning if goal is inconsistent with target calories (e.g. weightLoss with very high calorie target)
+| Validation | Type | Description |
+|---|---|---|
+| Macros sum to 100% | Error | `protein% + carbs% + fat%` must equal exactly 100 |
+| Minimum calories | Error | `target_calories` must be at least 1000 kcal |
+| Positive nutritional values | Error | Calories, protein, carbs, fat cannot be negative |
+| Recipe has ingredients | Error | Each recipe must have at least one ingredient |
+| Recipe has steps | Error | Each recipe must have at least one step |
+| Ingredients exist | Error | All ingredients must exist in built-in DB, custom definitions, or API |
+| Options not empty | Error | Each options block must contain at least one recipe |
+| Workout has days | Error | Each workout must be assigned to at least one day |
+| Plan has meals | Error | Each plan must have at least one meal assignment |
+| Goal-calorie consistency | Warning | Warns if goal contradicts calorie target |
 
 ## 7. VS Code Support
 
