@@ -1,0 +1,28 @@
+[build-system]
+requires = ["flit_core>=3.2.0,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "fitplan"
+version = "0.1.0"
+description = "FitPlan DSL — language for nutrition and training planning"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Anja Maksimovic" },
+    { name = "Marija Ilic" },
+    { name = "Biljana Mijic" },
+    { name = "Ivana Ilijin" }
+]
+dependencies = [
+    "textX>=3.0.0",
+    "Jinja2>=3.0.0",
+    "click>=8.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["flit", "pytest"]
+
+[project.urls]
+Homepage = "https://github.com/AnjaMaksimovic/FitPlan"
