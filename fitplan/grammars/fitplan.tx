@@ -1,0 +1,77 @@
+/*
+    FitPlan DSL Grammar
+    Initial version — Recipe and custom Ingredient concepts
+*/
+
+FitPlanModel:
+    declarations+=Declaration
+;
+
+Declaration:
+    Ingredient | Recipe
+;
+
+
+// INGREDIENT — optional custom ingredient (built-in DB has common ones)
+Ingredient:
+    'ingredient' name=ID '{'
+        'per' amount=INT unit=Unit
+        'calories' calories=NUMBER 'kcal'
+        'protein'  protein=NUMBER 'g'
+        'carbs'    carbs=NUMBER 'g'
+        'fat'      fat=NUMBER 'g'
+        ('fiber'   fiber=NUMBER 'g')?
+        ('allergens' '[' allergens*=ID[','] ']')?
+        ('category' category=Category)?
+    '}'
+;
+
+Unit:
+    '100g' | 'g' | 'ml' | '100ml'
+;
+
+Category:
+    'meat' | 'fish' | 'dairy' | 'vegetable' | 'fruit' |
+    'grain' | 'legume' | 'fat' | 'sweetener' | 'other'
+;
+
+
+// RECIPE — uses ingredients (built-in or custom)
+Recipe:
+    'recipe' name=ID '{'
+        'serves'     serves=INT
+        'time'       time=INT 'min'
+        'difficulty' difficulty=Difficulty
+        'ingredients' '{'
+            items+=IngredientUse
+        '}'
+        'steps' '{'
+            steps+=Step
+        '}'
+        ('tags' '[' tags+=ID[','] ']')?
+    '}'
+;
+
+IngredientUse:
+    ingredient=ID amount=NUMBER unit=MassUnit
+;
+
+MassUnit:
+    'g' | 'kg' | 'ml' | 'l' | 'tbsp' | 'tsp' | 'piece' | 'pieces'
+;
+
+Step:
+    'step' description=STRING
+    ('duration' duration=INT 'min')?
+    ('temperature' temperature=INT 'C')?
+;
+
+Difficulty:
+    'easy' | 'medium' | 'hard'
+;
+
+
+// COMMENTS
+Comment:
+    /\/\/.*$/
+;
