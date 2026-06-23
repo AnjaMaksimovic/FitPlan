@@ -1,6 +1,6 @@
 /*
     FitPlan DSL Grammar
-    Initial version — Recipe and custom Ingredient concepts
+    Recipe ,custom Ingredient concepts and Meal options
 */
 
 FitPlanModel:
@@ -8,7 +8,7 @@ FitPlanModel:
 ;
 
 Declaration:
-    Ingredient | Recipe
+    Ingredient | Recipe | MealOptions
 ;
 
 
@@ -70,6 +70,16 @@ Difficulty:
     'easy' | 'medium' | 'hard'
 ;
 
+// MEAL OPTIONS — define variations per meal type
+MealOptions:
+    'options' name=ID '{'
+        recipes+=RecipeRef
+    '}'
+;
+
+RecipeRef:
+    recipe=[Recipe] ('servings' servings=INT)?
+;
 
 // COMMENTS
 Comment:
