@@ -1,6 +1,6 @@
 /*
     FitPlan DSL Grammar
-    Recipe ,custom Ingredient concepts and Meal options
+    Recipe, custom Ingredient concepts, Meal options and Workouts
 */
 
 FitPlanModel:
@@ -8,7 +8,7 @@ FitPlanModel:
 ;
 
 Declaration:
-    Ingredient | Recipe | MealOptions
+    Ingredient | Recipe | MealOptions | Workout
 ;
 
 
@@ -79,6 +79,32 @@ MealOptions:
 
 RecipeRef:
     recipe=[Recipe] ('servings' servings=INT)?
+;
+
+// WORKOUT — separate section with day assignments
+Workout:
+    'workout' name=ID '{'
+        'type'      type=WorkoutType
+        'duration'  duration=INT 'min'
+        'intensity' intensity=Intensity
+        'days' '[' days+=DayName[','] ']'
+        ('burns' burns=INT 'kcal')?
+    '}'
+;
+
+WorkoutType:
+    'running'  | 'cycling'   | 'swimming'  | 'weightlifting' |
+    'yoga'     | 'pilates'   | 'hiit'      | 'walking'       |
+    'rowing'   | 'elliptical'| 'hiking'    | 'other'
+;
+
+Intensity:
+    'low' | 'medium' | 'high'
+;
+
+DayName:
+    'Monday'    | 'Tuesday' | 'Wednesday' | 'Thursday' |
+    'Friday'    | 'Saturday' | 'Sunday'
 ;
 
 // COMMENTS
