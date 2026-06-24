@@ -26,3 +26,6 @@ dev = ["flit", "pytest"]
 
 [project.urls]
 Homepage = "https://github.com/AnjaMaksimovic/FitPlan"
+
+[project.entry-points."textx_languages"]
+fitplan = "fitplan.main:fitplan_language"
