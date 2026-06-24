@@ -1,6 +1,8 @@
 /*
     FitPlan DSL Grammar
-    Recipe, custom Ingredient concepts, Meal options and Workouts
+    Defines core language concepts: Recipe, custom Ingredient,
+    MealOptions for meal variations, Workout with day assignments,
+    and Plan with goals, macros, and smart filters.
 */
 
 FitPlanModel:
@@ -8,7 +10,7 @@ FitPlanModel:
 ;
 
 Declaration:
-    Ingredient | Recipe | MealOptions | Workout
+    Ingredient | Recipe | MealOptions | Workout | Plan
 ;
 
 
@@ -105,6 +107,42 @@ Intensity:
 DayName:
     'Monday'    | 'Tuesday' | 'Wednesday' | 'Thursday' |
     'Friday'    | 'Saturday' | 'Sunday'
+;
+
+// PLAN — references options, auto-generates schedule
+Plan:
+    'plan' name=ID '{'
+        'goal'            goal=Goal
+        'target_calories' target_calories=INT 'kcal'
+        'target_macros' '{'
+            'protein' protein_pct=INT '%'
+            'carbs'   carbs_pct=INT '%'
+            'fat'     fat_pct=INT '%'
+        '}'
+        'meals' '{'
+            assignments+=MealAssignment
+        '}'
+        ('filters' '{'
+            filters+=Filter
+        '}')?
+    '}'
+;
+
+Goal:
+    'weightLoss' | 'muscleGain' | 'maintenance' | 'endurance'
+;
+
+MealAssignment:
+    type=MealType 'from' options=[MealOptions]
+;
+
+MealType:
+    'breakfast' | 'lunch' | 'dinner' | 'snack'
+;
+
+Filter:
+    'no_repeat_same_day' |
+    'max_per_week' recipe=[Recipe] count=INT
 ;
 
 // COMMENTS
