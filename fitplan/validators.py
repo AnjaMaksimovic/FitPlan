@@ -48,6 +48,45 @@ def validate_workout_burns(workout):
     if hasattr(workout, 'burns') and workout.burns is not None and workout.burns < 0:
         raise ValueError(f"Workout '{workout.name}': burns cannot be negative")
 
+def validate_macros_sum(plan):
+    """Macronutrient percentages must sum to exactly 100%."""
+    total = plan.protein_pct + plan.carbs_pct + plan.fat_pct
+    if total != 100:
+        raise ValueError(
+            f"Plan '{plan.name}': macronutrient percentages must sum to 100%, "
+            f"currently {total}%"
+        )
+
+
+def validate_target_calories(plan):
+    """Target calories must be at least 1000 kcal."""
+    if plan.target_calories < 1000:
+        raise ValueError(
+            f"Plan '{plan.name}': target_calories must be at least 1000 kcal, "
+            f"currently {plan.target_calories}"
+        )
+
+
+def validate_plan_has_meals(plan):
+    """Plan must have at least one meal assignment."""
+    if not plan.assignments:
+        raise ValueError(f"Plan '{plan.name}': must have at least one meal assignment")
+
+
+def validate_goal_calories(plan):
+    """Warning if goal is inconsistent with target calories."""
+    warnings = []
+    if plan.goal == 'weightLoss' and plan.target_calories > 2500:
+        warnings.append(
+            f"Warning: Plan '{plan.name}': goal is weightLoss but "
+            f"target_calories ({plan.target_calories}) is high"
+        )
+    if plan.goal == 'muscleGain' and plan.target_calories < 1800:
+        warnings.append(
+            f"Warning: Plan '{plan.name}': goal is muscleGain but "
+            f"target_calories ({plan.target_calories}) is low"
+        )
+    return warnings
 
 def run_all_validations(model):
     """Runs all validations on the model. Returns list of warnings."""
@@ -71,5 +110,11 @@ def run_all_validations(model):
         elif cls == 'Workout':
             validate_workout_days(decl)
             validate_workout_burns(decl)
+
+        elif cls == 'Plan':
+            validate_macros_sum(decl)
+            validate_target_calories(decl)
+            validate_plan_has_meals(decl)
+            warnings.extend(validate_goal_calories(decl))
 
     return warnings
