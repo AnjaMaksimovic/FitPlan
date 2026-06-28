@@ -1,0 +1,272 @@
+// FitPlan DSL — Weight Loss Plan
+// Uses built-in ingredient database — no need to define nutritional values manually!
+// Only custom ingredients need explicit definition.
+
+// =====================================================================
+// CUSTOM INGREDIENT (optional — only if not in built-in database)
+// =====================================================================
+
+ingredient ProteinBar {
+    per 100g
+    calories 350 kcal
+    protein 30 g
+    carbs 40 g
+    fat 10 g
+    category other
+}
+
+// =====================================================================
+// RECIPES — reference ingredients by name (built-in or custom)
+// =====================================================================
+
+recipe OatmealWithBanana {
+    serves 1
+    time 10 min
+    difficulty easy
+    ingredients {
+        Oats 80 g
+        Milk 200 ml
+        Banana 100 g
+        Blueberry 50 g
+    }
+    steps {
+        step "Cook oats in milk" duration 5 min temperature 100 C
+        step "Slice banana and add blueberries on top"
+    }
+    tags [vegetarian, highFiber, breakfast]
+}
+
+recipe EggsWithAvocado {
+    serves 1
+    time 15 min
+    difficulty easy
+    ingredients {
+        Egg 150 g
+        Avocado 100 g
+        Tomato 80 g
+        OliveOil 5 ml
+    }
+    steps {
+        step "Fry eggs in olive oil" duration 5 min temperature 160 C
+        step "Slice avocado and tomato"
+        step "Serve together"
+    }
+    tags [highProtein, lowCarb, breakfast]
+}
+
+recipe GreekYogurtBowl {
+    serves 1
+    time 5 min
+    difficulty easy
+    ingredients {
+        GreekYogurt 200 g
+        Almonds 30 g
+        Honey 15 g
+        Strawberry 80 g
+    }
+    steps {
+        step "Pour yogurt into a bowl"
+        step "Top with almonds, honey and strawberries"
+    }
+    tags [highProtein, quickMeal, breakfast]
+}
+
+recipe ChickenWithBroccoli {
+    serves 2
+    time 30 min
+    difficulty easy
+    ingredients {
+        ChickenBreast 300 g
+        Broccoli 250 g
+        OliveOil 15 ml
+        Garlic 10 g
+    }
+    steps {
+        step "Cut chicken into cubes" duration 5 min
+        step "Heat pan and add olive oil" duration 2 min temperature 180 C
+        step "Fry chicken until golden" duration 10 min temperature 180 C
+        step "Add broccoli and garlic, stir fry" duration 8 min temperature 160 C
+    }
+    tags [highProtein, lowCarb, glutenFree]
+}
+
+recipe SalmonWithQuinoa {
+    serves 2
+    time 40 min
+    difficulty medium
+    ingredients {
+        Salmon 300 g
+        Quinoa 150 g
+        Spinach 100 g
+        OliveOil 10 ml
+        Tomato 100 g
+    }
+    steps {
+        step "Cook quinoa in salted water" duration 15 min temperature 100 C
+        step "Preheat oven" duration 10 min temperature 200 C
+        step "Drizzle salmon with olive oil and bake" duration 15 min temperature 200 C
+        step "Serve on quinoa with spinach and tomato"
+    }
+    tags [highProtein, omega3, glutenFree]
+}
+
+recipe TofuStirFry {
+    serves 2
+    time 25 min
+    difficulty medium
+    ingredients {
+        Tofu 300 g
+        BellPepper 150 g
+        Broccoli 150 g
+        OliveOil 15 ml
+        BrownRice 200 g
+    }
+    steps {
+        step "Cook brown rice" duration 20 min temperature 100 C
+        step "Cut tofu into cubes and fry" duration 8 min temperature 180 C
+        step "Add vegetables and stir fry" duration 7 min temperature 170 C
+        step "Serve over rice"
+    }
+    tags [vegan, highFiber]
+}
+
+recipe LentilSoup {
+    serves 3
+    time 45 min
+    difficulty easy
+    ingredients {
+        Lentils 200 g
+        Carrot 100 g
+        Onion 80 g
+        Tomato 150 g
+        OliveOil 10 ml
+        Garlic 10 g
+    }
+    steps {
+        step "Dice onion, carrot and garlic" duration 5 min
+        step "Saute in olive oil" duration 5 min temperature 160 C
+        step "Add lentils and tomato, cover with water" duration 2 min
+        step "Simmer until lentils are soft" duration 30 min temperature 100 C
+    }
+    tags [vegan, highProtein, highFiber]
+}
+
+recipe ChickpeaSalad {
+    serves 2
+    time 15 min
+    difficulty easy
+    ingredients {
+        Chickpeas 200 g
+        Cucumber 150 g
+        Tomato 150 g
+        Avocado 100 g
+        OliveOil 15 ml
+    }
+    steps {
+        step "Drain chickpeas"
+        step "Dice cucumber, tomato and avocado"
+        step "Mix everything together"
+        step "Drizzle with olive oil and season"
+    }
+    tags [vegan, noCook, highFiber]
+}
+
+recipe GrilledChickenSalad {
+    serves 1
+    time 20 min
+    difficulty easy
+    ingredients {
+        ChickenBreast 200 g
+        Spinach 100 g
+        Tomato 100 g
+        Cucumber 100 g
+        OliveOil 10 ml
+    }
+    steps {
+        step "Grill chicken breast" duration 12 min temperature 200 C
+        step "Chop vegetables"
+        step "Slice chicken and serve on salad"
+        step "Drizzle with olive oil"
+    }
+    tags [highProtein, lowCarb, glutenFree]
+}
+
+// =====================================================================
+// MEAL OPTIONS — define variations, generator picks automatically
+// =====================================================================
+
+options breakfast_options {
+    OatmealWithBanana
+    EggsWithAvocado
+    GreekYogurtBowl
+}
+
+options lunch_options {
+    ChickenWithBroccoli
+    SalmonWithQuinoa servings 1
+    TofuStirFry servings 1
+    ChickpeaSalad
+}
+
+options dinner_options {
+    LentilSoup
+    GrilledChickenSalad
+    SalmonWithQuinoa servings 1
+    TofuStirFry servings 1
+}
+
+options snack_options {
+    GreekYogurtBowl
+}
+
+// =====================================================================
+// WORKOUTS — defined once, assigned to multiple days
+// =====================================================================
+
+workout StrengthTraining {
+    type weightlifting
+    duration 60 min
+    intensity high
+    days [Monday, Wednesday, Friday]
+    burns 400 kcal
+}
+
+workout CardioRun {
+    type running
+    duration 30 min
+    intensity medium
+    days [Tuesday, Saturday]
+    burns 350 kcal
+}
+
+workout YogaSession {
+    type yoga
+    duration 45 min
+    intensity low
+    days [Thursday]
+    burns 180 kcal
+}
+
+// =====================================================================
+// PLAN — simplified, auto-generates 7-day schedule
+// =====================================================================
+
+plan WeightLossPlan {
+    goal weightLoss
+    target_calories 1800 kcal
+    target_macros {
+        protein 40 %
+        carbs 30 %
+        fat 30 %
+    }
+    meals {
+        breakfast from breakfast_options
+        lunch from lunch_options
+        dinner from dinner_options
+        snack from snack_options
+    }
+    filters {
+        no_repeat_same_day
+        max_per_week ChickenWithBroccoli 3
+    }
+}
