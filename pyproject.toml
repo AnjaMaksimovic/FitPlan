@@ -29,3 +29,6 @@ Homepage = "https://github.com/AnjaMaksimovic/FitPlan"
 
 [project.entry-points."textx_languages"]
 fitplan = "fitplan.main:fitplan_language"
+
+[project.entry-points."textx_generators"]
+fitplan_html = "fitplan.generators.html_generator:html_generator"
