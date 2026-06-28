@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitPlan — Meal & Training Plan</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #2d3748; line-height: 1.6; }
+
+    /* Header & Navigation */
+    header { background: linear-gradient(135deg, #38a169, #2f855a); color: white; padding: 2rem; text-align: center; }
+    header h1 { font-size: 2.2rem; margin-bottom: 0.3rem; }
+    header p { opacity: 0.85; font-size: 1rem; }
+    nav { background: #2f855a; display: flex; justify-content: center; gap: 1rem; padding: 0.6rem; }
+    nav a { color: white; text-decoration: none; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.9rem; transition: background 0.2s; }
+    nav a:hover { background: rgba(255,255,255,0.2); }
+
+    .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+    .section-title { font-size: 1.6rem; color: #2f855a; border-bottom: 3px solid #38a169; padding-bottom: 0.5rem; margin: 2.5rem 0 1.5rem; }
+
+    /* Recipe Cards */
+    .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .recipe-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s; }
+    .recipe-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    .recipe-header { background: linear-gradient(135deg, #48bb78, #38a169); color: white; padding: 1.2rem 1.5rem; }
+    .recipe-header h3 { font-size: 1.2rem; margin-bottom: 0.4rem; }
+    .recipe-meta { display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.9; }
+    .recipe-body { padding: 1.2rem 1.5rem; }
+
+    /* Nutrition Summary */
+    .nutrition-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+    .nut-box { background: #f0fff4; border: 1px solid #c6f6d5; border-radius: 8px; padding: 0.5rem; text-align: center; }
+    .nut-box .value { font-size: 1.1rem; font-weight: 700; color: #276749; }
+    .nut-box .label { font-size: 0.7rem; color: #718096; text-transform: uppercase; }
+
+    /* Ingredients & Steps */
+    .ingredients-list { margin-bottom: 1rem; }
+    .ingredients-list h4, .steps-list h4 { color: #2f855a; margin-bottom: 0.5rem; font-size: 0.95rem; }
+    .ingredients-list ul { list-style: none; }
+    .ingredients-list li { padding: 0.2rem 0; border-bottom: 1px solid #f7fafc; font-size: 0.9rem; display: flex; justify-content: space-between; }
+    .step-item { display: flex; gap: 0.8rem; margin-bottom: 0.6rem; align-items: flex-start; }
+    .step-num { background: #38a169; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .step-desc { font-size: 0.88rem; }
+    .step-meta { font-size: 0.78rem; color: #718096; margin-top: 0.1rem; }
+
+    /* Tags */
+    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+    .tag { background: #ebf8ff; color: #2b6cb0; border-radius: 20px; padding: 0.2rem 0.7rem; font-size: 0.75rem; }
+
+    /* Plan */
+    .plan-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 2rem; }
+    .plan-header { background: linear-gradient(135deg, #2f855a, #276749); color: white; padding: 1.5rem 2rem; }
+    .plan-header h3 { font-size: 1.4rem; margin-bottom: 0.8rem; }
+    .plan-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .plan-stat { font-size: 0.9rem; opacity: 0.9; }
+    .plan-stat strong { display: block; font-size: 1.1rem; }
+
+    /* Days Grid */
+    .days-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; padding: 1.5rem; }
+    .day-card { border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+    .day-header { background: #f0fff4; padding: 0.6rem 1rem; font-weight: 700; color: #276749; border-bottom: 1px solid #c6f6d5; }
+    .day-body { padding: 0.8rem 1rem; }
+    .meal-row { display: flex; justify-content: space-between; align-items: center; padding: 0.3rem 0; border-bottom: 1px solid #f7fafc; font-size: 0.88rem; }
+    .meal-type { color: #718096; font-size: 0.78rem; text-transform: uppercase; font-weight: 600; }
+    .workout-row { margin-top: 0.6rem; background: #ebf8ff; border-radius: 6px; padding: 0.4rem 0.7rem; font-size: 0.82rem; color: #2b6cb0; }
+    .day-total { margin-top: 0.6rem; text-align: right; font-weight: 700; color: #276749; font-size: 0.9rem; }
+
+    footer { text-align: center; padding: 2rem; color: #a0aec0; font-size: 0.85rem; margin-top: 3rem; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🥗 FitPlan</h1>
+    <p>Auto-generated meal & training plan</p>
+</header>
+
+<nav>
+    {% if recipes %}<a href="#recipes">Recipes</a>{% endif %}
+    {% if plans %}<a href="#plan">Weekly Plan</a>{% endif %}
+</nav>
+
+<div class="container">
+
+    {% if recipes %}
+    <h2 class="section-title" id="recipes">📋 Recipes</h2>
+    <div class="recipe-grid">
+    {% for recipe, nutrition in recipes %}
+        <div class="recipe-card">
+            <div class="recipe-header">
+                <h3>{{ recipe.name }}</h3>
+                <div class="recipe-meta">
+                    <span>⏱ {{ recipe.time }} min</span>
+                    <span>🍽 {{ recipe.serves }} servings</span>
+                    <span>{{ recipe.difficulty }}</span>
+                </div>
+            </div>
+            <div class="recipe-body">
+                <div class="nutrition-summary">
+                    <div class="nut-box"><div class="value">{{ nutrition.calories | round(0) | int }}</div><div class="label">kcal</div></div>
+                    <div class="nut-box"><div class="value">{{ nutrition.protein | round(1) }}g</div><div class="label">protein</div></div>
+                    <div class="nut-box"><div class="value">{{ nutrition.carbs | round(1) }}g</div><div class="label">carbs</div></div>
+                    <div class="nut-box"><div class="value">{{ nutrition.fat | round(1) }}g</div><div class="label">fat</div></div>
+                </div>
+                <div class="ingredients-list">
+                    <h4>🛒 Ingredients</h4>
+                    <ul>
+                    {% for item in recipe.items %}
+                        <li><span>{{ item.ingredient }}</span><span>{{ item.amount }} {{ item.unit }}</span></li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                <div class="steps-list">
+                    <h4>👨‍🍳 Steps</h4>
+                    {% for step in recipe.steps %}
+                    <div class="step-item">
+                        <div class="step-num">{{ loop.index }}</div>
+                        <div>
+                            <div class="step-desc">{{ step.description }}</div>
+                            <div class="step-meta">
+                                {% if step.duration %}⏱ {{ step.duration }} min{% endif %}
+                                {% if step.temperature %} 🌡 {{ step.temperature }}°C{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if recipe.tags %}
+                <div class="tags">
+                    {% for tag in recipe.tags %}<span class="tag">#{{ tag }}</span>{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if plans %}
+    <h2 class="section-title" id="plan">📅 Auto-Generated Weekly Plan</h2>
+    {% for plan, day_details in plans %}
+    <div class="plan-card">
+        <div class="plan-header">
+            <h3>{{ plan.name }}</h3>
+            <div class="plan-stats">
+                <div class="plan-stat"><strong>{{ plan.goal }}</strong>Goal</div>
+                <div class="plan-stat"><strong>{{ plan.target_calories }} kcal</strong>Daily target</div>
+                <div class="plan-stat"><strong>{{ plan.protein_pct }}% / {{ plan.carbs_pct }}% / {{ plan.fat_pct }}%</strong>P / C / F</div>
+            </div>
+        </div>
+        <div class="days-grid">
+        {% for day, day_plan, day_nutrition, day_workouts in day_details %}
+            <div class="day-card">
+                <div class="day-header">{{ day }}</div>
+                <div class="day-body">
+                    {% for meal_type in ['breakfast', 'lunch', 'dinner', 'snack'] %}
+                    {% if meal_type in day_plan %}
+                    <div class="meal-row">
+                        <div>
+                            <div class="meal-type">{{ meal_type }}</div>
+                            <div>{{ day_plan[meal_type].recipe.name }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% for w in day_workouts %}
+                    <div class="workout-row">🏋️ {{ w.name }} · {{ w.duration }} min</div>
+                    {% endfor %}
+                    <div class="day-total">{{ day_nutrition.calories | round(0) | int }} kcal</div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+</div>
+
+<footer>Generated by FitPlan DSL · {{ generated_at }}</footer>
+
+</body>
+</html>
