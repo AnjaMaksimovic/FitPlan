@@ -1,0 +1,151 @@
+/*
+    FitPlan DSL Grammar
+    Defines core language concepts: Recipe, custom Ingredient,
+    MealOptions for meal variations, Workout with day assignments,
+    and Plan with goals, macros, and smart filters.
+*/
+
+FitPlanModel:
+    declarations+=Declaration
+;
+
+Declaration:
+    Ingredient | Recipe | MealOptions | Workout | Plan
+;
+
+
+// INGREDIENT — optional custom ingredient (built-in DB has common ones)
+Ingredient:
+    'ingredient' name=ID '{'
+        'per' amount=INT unit=Unit
+        'calories' calories=NUMBER 'kcal'
+        'protein'  protein=NUMBER 'g'
+        'carbs'    carbs=NUMBER 'g'
+        'fat'      fat=NUMBER 'g'
+        ('fiber'   fiber=NUMBER 'g')?
+        ('allergens' '[' allergens*=ID[','] ']')?
+        ('category' category=Category)?
+    '}'
+;
+
+Unit:
+    '100g' | 'g' | 'ml' | '100ml'
+;
+
+Category:
+    'meat' | 'fish' | 'dairy' | 'vegetable' | 'fruit' |
+    'grain' | 'legume' | 'fat' | 'sweetener' | 'other'
+;
+
+
+// RECIPE — uses ingredients (built-in or custom)
+Recipe:
+    'recipe' name=ID '{'
+        'serves'     serves=INT
+        'time'       time=INT 'min'
+        'difficulty' difficulty=Difficulty
+        'ingredients' '{'
+            items+=IngredientUse
+        '}'
+        'steps' '{'
+            steps+=Step
+        '}'
+        ('tags' '[' tags+=ID[','] ']')?
+    '}'
+;
+
+IngredientUse:
+    ingredient=ID amount=NUMBER unit=MassUnit
+;
+
+MassUnit:
+    'g' | 'kg' | 'ml' | 'l' | 'tbsp' | 'tsp' | 'piece' | 'pieces'
+;
+
+Step:
+    'step' description=STRING
+    ('duration' duration=INT 'min')?
+    ('temperature' temperature=INT 'C')?
+;
+
+Difficulty:
+    'easy' | 'medium' | 'hard'
+;
+
+// MEAL OPTIONS — define variations per meal type
+MealOptions:
+    'options' name=ID '{'
+        recipes+=RecipeRef
+    '}'
+;
+
+RecipeRef:
+    recipe=[Recipe] ('servings' servings=INT)?
+;
+
+// WORKOUT — separate section with day assignments
+Workout:
+    'workout' name=ID '{'
+        'type'      type=WorkoutType
+        'duration'  duration=INT 'min'
+        'intensity' intensity=Intensity
+        'days' '[' days+=DayName[','] ']'
+        ('burns' burns=INT 'kcal')?
+    '}'
+;
+
+WorkoutType:
+    'running'  | 'cycling'   | 'swimming'  | 'weightlifting' |
+    'yoga'     | 'pilates'   | 'hiit'      | 'walking'       |
+    'rowing'   | 'elliptical'| 'hiking'    | 'other'
+;
+
+Intensity:
+    'low' | 'medium' | 'high'
+;
+
+DayName:
+    'Monday'    | 'Tuesday' | 'Wednesday' | 'Thursday' |
+    'Friday'    | 'Saturday' | 'Sunday'
+;
+
+// PLAN — references options, auto-generates schedule
+Plan:
+    'plan' name=ID '{'
+        'goal'            goal=Goal
+        'target_calories' target_calories=INT 'kcal'
+        'target_macros' '{'
+            'protein' protein_pct=INT '%'
+            'carbs'   carbs_pct=INT '%'
+            'fat'     fat_pct=INT '%'
+        '}'
+        'meals' '{'
+            assignments+=MealAssignment
+        '}'
+        ('filters' '{'
+            filters+=Filter
+        '}')?
+    '}'
+;
+
+Goal:
+    'weightLoss' | 'muscleGain' | 'maintenance' | 'endurance'
+;
+
+MealAssignment:
+    type=MealType 'from' options=[MealOptions]
+;
+
+MealType:
+    'breakfast' | 'lunch' | 'dinner' | 'snack'
+;
+
+Filter:
+    'no_repeat_same_day' |
+    'max_per_week' recipe=[Recipe] count=INT
+;
+
+// COMMENTS
+Comment:
+    /\/\/.*$/
+;
