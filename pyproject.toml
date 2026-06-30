@@ -32,3 +32,4 @@ fitplan = "fitplan.main:fitplan_language"
 
 [project.entry-points."textx_generators"]
 fitplan_html = "fitplan.generators.html_generator:html_generator"
+fitplan_md = "fitplan.generators.md_generator:md_generator"
