@@ -17,7 +17,7 @@ The target users are fitness enthusiasts, nutritionists, and anyone who wants to
 
 ## 2. Technologies
 
-- **Python 3.12+** - primary implementation language
+- **Python 3.9+** - primary implementation language
 - **textX** - grammar definition and parsing
 - **Jinja2** - template engine for output generation
 - **OpenFoodFacts API** - automatic nutritional data lookup with local caching
@@ -198,13 +198,10 @@ Filters control how meals are distributed across the week:
 
 ## 5. Generators
 
-| Generator | Description |
-|---|---|
-| HTML | Styled web page with recipe cards and auto-generated weekly plan |
-| Nutrition Report | Daily calorie and macro comparison against targets with ✅⬇️⬆️ indicators |
-| Shopping List | Aggregated ingredients for the week, grouped by category, with interactive checkboxes |
-| Markdown | Weekly schedule with recipes, workouts, and summary statistics |
-| Progress Tracker | Interactive HTML where users log meals, track workouts, add extra food, and get activity suggestions for calorie overages |
+| Generator | Command | Description |
+|---|---|---|
+| HTML | `--target html` | Styled web page with recipe cards and auto-generated weekly plan |
+| Markdown | `--target md` | Weekly schedule with recipes, workouts, and summary statistics |
 
 ### Progress Tracker Features
 
@@ -233,6 +230,73 @@ The progress tracker generates an interactive HTML page where users can:
 ## 7. VS Code Support
 
 The project includes a VS Code extension with syntax highlighting for `.fitplan` files, context-aware code completion via LSP server (e.g. offering defined ingredient names inside a recipe block), hover documentation for keywords, and real-time error diagnostics.
+
+## Installation
+
+### Prerequisites
+
+- Python 3.9+
+- Git
+
+### macOS / Linux
+
+```bash
+# Clone the repository
+git clone https://github.com/AnjaMaksimovic/FitPlan.git
+cd FitPlan
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install pip if needed
+python3 -m ensurepip
+pip install --upgrade pip
+
+# Install the project
+pip install -e .
+
+# Fix arpeggio compatibility (required)
+sed -i '' 's/super(DebugPrinter, self).__init__(\*\*kwargs)/super(DebugPrinter, self).__init__()/' venv/lib/python3.*/site-packages/arpeggio/__init__.py
+
+# Verify installation
+textx list-languages
+# Should show: fitplan (*.fitplan)
+```
+
+### Windows
+
+```powershell
+# Clone the repository
+git clone https://github.com/AnjaMaksimovic/FitPlan.git
+cd FitPlan
+
+# Create virtual environment
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# Install the project
+pip install --upgrade pip
+pip install -e .
+
+# Fix arpeggio compatibility (required)
+$path = python -c "import arpeggio; print(arpeggio.__file__)"
+(Get-Content $path) -replace 'super\(DebugPrinter, self\).__init__\(\*\*kwargs\)', 'super(DebugPrinter, self).__init__()' | Set-Content $path
+
+# Verify installation
+textx list-languages
+# Should show: fitplan (*.fitplan)
+```
+
+## Usage
+
+```bash
+# Generate HTML page with recipe cards and weekly plan
+textx generate examples/weight_loss.fitplan --target html --overwrite
+
+# Generate Markdown weekly schedule
+textx generate examples/weight_loss.fitplan --target md --overwrite
+```
 
 ## Contributors
 

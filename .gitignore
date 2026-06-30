@@ -7,3 +7,6 @@ venv/
 .venv/
 .DS_Store
 .idea/
+examples/*.html
+examples/*.md
+examples/test_*.fitplan

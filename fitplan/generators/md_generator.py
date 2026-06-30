@@ -115,6 +115,8 @@ def md_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
             day_workouts = get_workouts_for_day(workouts, day)
 
             lines.append(f'#### {day}\n')
+            workout_burns = sum(w.burns if w.burns else 0 for w in day_workouts)
+            net_kcal = day_kcal - workout_burns
             meal_table = ['| Meal | Recipe | Calories |', '|---|---|---|']
             for meal_type in ['breakfast', 'lunch', 'dinner', 'snack']:
                 if meal_type in day_plan:
@@ -123,7 +125,7 @@ def md_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
                     kcal = calc_nutrition_for_recipe(recipe, custom_ingredients, servings)['calories']
                     emoji = {'breakfast': '🌅', 'lunch': '☀️', 'dinner': '🌙', 'snack': '🍎'}[meal_type]
                     meal_table.append(f'| {emoji} {meal_type.capitalize()} | {recipe.name} | {kcal:.0f} kcal |')
-            meal_table.append(f'| **Total** | | **{day_kcal:.0f} kcal** |')
+            meal_table.append(f'| **Total** | | **{day_kcal:.0f} eaten / {net_kcal:.0f} net** |')
             lines.extend(meal_table)
             lines.append('')
 
@@ -134,7 +136,7 @@ def md_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
                     lines.append(f'**Workout:** {emoji} {w.name} · {w.duration} min · {w.intensity}{burns}')
                 lines.append('')
 
-            diff = day_kcal - plan.target_calories
+            diff = net_kcal - plan.target_calories
             diff_str = f'+{diff:.0f}' if diff > 0 else f'{diff:.0f}'
             status = '✅' if abs(diff) <= plan.target_calories * 0.1 else ('⬆️' if diff > 0 else '⬇️')
             lines.append(f'> {status} Difference from target: {diff_str} kcal\n')

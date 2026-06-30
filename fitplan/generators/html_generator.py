@@ -42,11 +42,13 @@ def html_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
     workouts = [d for d in declarations if d.__class__.__name__ == 'Workout']
     plans = [d for d in declarations if d.__class__.__name__ == 'Plan']
 
+    # Calculate nutrition for each recipe (per serving)
     recipe_data = []
     for r in recipes:
         nutrition = calc_nutrition_for_recipe(r, custom_ingredients, servings=1)
         recipe_data.append((r, nutrition))
 
+    # Generate weekly plans
     plan_data = []
     for plan in plans:
         weekly = generate_weekly_plan(plan, recipes)
@@ -55,9 +57,12 @@ def html_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
             day_plan = weekly.get(day, {})
             day_nutrition = calc_nutrition_for_day(day_plan, custom_ingredients)
             day_workouts = get_workouts_for_day(workouts, day)
-            day_details.append((day, day_plan, day_nutrition, day_workouts))
+            workout_burns = sum(w.burns if w.burns else 0 for w in day_workouts)
+            net_kcal = day_nutrition['calories'] - workout_burns
+            day_details.append((day, day_plan, day_nutrition, day_workouts, workout_burns, net_kcal))
         plan_data.append((plan, day_details))
 
+    # Render Jinja2 template
     jinja_env = Environment(
         loader=FileSystemLoader(join(THIS_FOLDER, 'templates')),
         trim_blocks=True,
