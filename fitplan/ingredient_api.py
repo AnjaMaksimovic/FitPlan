@@ -39,6 +39,21 @@ def _save_to_cache(name, data):
         json.dump(data, f, indent=2)
 
 
+def clear_cache():
+    """Clears all cached API results."""
+    import shutil
+    if os.path.exists(CACHE_DIR):
+        shutil.rmtree(CACHE_DIR)
+        print("Ingredient cache cleared.")
+
+
+def list_cached_ingredients():
+    """Lists all cached ingredient names."""
+    if not os.path.exists(CACHE_DIR):
+        return []
+    return [f.replace(".json", "") for f in os.listdir(CACHE_DIR) if f.endswith(".json")]
+
+
 def fetch_ingredient_from_api(name):
     """
     Searches OpenFoodFacts for an ingredient using API v2.
