@@ -1,3 +1,4 @@
+from .ingredient_db import BUILTIN_INGREDIENTS
 def validate_ingredient_values(ingredient):
     """Nutritional values cannot be negative."""
     for field in ['calories', 'protein', 'carbs', 'fat']:
@@ -92,11 +93,30 @@ def validate_goal_calories(plan):
             f"target_calories ({plan.target_calories}) may be low for endurance training."
         )
     return warnings
-
+def validate_recipe_ingredients_exist(recipe, custom_ingredients):
+    """Checks that all ingredients exist in built-in DB, custom definitions, or API."""
+    from .ingredient_api import fetch_ingredient_from_api
+    custom_names = [ing.name for ing in custom_ingredients]
+    for item in recipe.items:
+        name = item.ingredient
+        if name not in BUILTIN_INGREDIENTS and name not in custom_names:
+            # Try API as last resort
+            api_data = fetch_ingredient_from_api(name)
+            if api_data:
+                print(f"  [API] Found '{name}' via OpenFoodFacts")
+            else:
+                raise ValueError(
+                    f"Recipe '{recipe.name}': ingredient '{name}' not found "
+                    f"in built-in database or OpenFoodFacts API. "
+                    f"Define it as a custom ingredient."
+                )
 def run_all_validations(model):
     """Runs all validations on the model. Returns list of warnings."""
     warnings = []
-
+    custom_ingredients = [
+        d for d in model.declarations
+        if d.__class__.__name__ == 'Ingredient'
+    ]
     for decl in model.declarations:
         cls = decl.__class__.__name__
 
@@ -108,6 +128,7 @@ def run_all_validations(model):
             validate_recipe_time(decl)
             validate_recipe_has_ingredients(decl)
             validate_recipe_has_steps(decl)
+            validate_recipe_ingredients_exist(decl, custom_ingredients)
 
         elif cls == 'MealOptions':
             validate_options_not_empty(decl)
