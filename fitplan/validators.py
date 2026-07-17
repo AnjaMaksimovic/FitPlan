@@ -87,6 +87,11 @@ def validate_goal_calories(plan):
             f"Warning: Plan '{plan.name}': goal is muscleGain but "
             f"target_calories ({plan.target_calories}) is low"
         )
+    if plan.goal == 'endurance' and plan.target_calories < 2000:
+        warnings.append(
+            f"Warning: Plan '{plan.name}': goal is endurance but "
+            f"target_calories ({plan.target_calories}) may be low for endurance training."
+        )
     return warnings
 def validate_recipe_ingredients_exist(recipe, custom_ingredients):
     """Checks that all ingredients exist in built-in DB, custom definitions, or API."""
