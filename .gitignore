@@ -10,4 +10,3 @@ venv/
 examples/*.html
 examples/*.md
 examples/test_*.fitplan
-.ingredient_cache/
