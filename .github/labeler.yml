@@ -21,7 +21,7 @@ example:
   - changed-files:
     - any-glob-to-any-file: 'examples/**'
 
-setup:
+documentation:
   - changed-files:
     - any-glob-to-any-file:
       - 'README.md'
