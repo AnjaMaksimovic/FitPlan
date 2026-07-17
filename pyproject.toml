@@ -19,6 +19,7 @@ dependencies = [
     "textX>=3.0.0",
     "Jinja2>=3.0.0",
     "click>=8.0.0",
+    "requests>=2.20.0",
 ]
 
 [project.optional-dependencies]
