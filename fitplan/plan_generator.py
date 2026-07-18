@@ -27,11 +27,21 @@ def get_recipe_protein_category(recipe):
 
 def generate_weekly_plan(plan, all_recipes):
     """
-    Generates a 7-day meal plan based on meal options.
-    Rotates through options for variety.
+    Generates a 7-day meal plan based on meal options and filters.
     Returns: { 'Monday': { 'breakfast': {'recipe': ..., 'servings': ...}, ... }, ... }
+
+    Filters:
+    - no_repeat_same_day: don't use same protein source for lunch and dinner
     """
-    # Build options dict: { 'breakfast': [{'recipe': ..., 'servings': ...}], ... }
+    # Parse filters
+    no_repeat_same_day = False
+
+    if hasattr(plan, 'filters') and plan.filters:
+        for f in plan.filters:
+            if not (hasattr(f, 'recipe') and f.recipe):
+                no_repeat_same_day = True
+
+    # Build options dict
     options = {}
     for assignment in plan.assignments:
         recipes = []
@@ -47,19 +57,39 @@ def generate_weekly_plan(plan, all_recipes):
 
     for day in DAYS:
         day_plan = {}
+        day_proteins = []  # Track protein categories used this day
 
         for meal_type in ['breakfast', 'lunch', 'dinner', 'snack']:
             if meal_type not in options:
                 continue
 
             available = options[meal_type]
+            candidates = []
 
-            # Rotate through options based on day index
+            for opt in available:
+                # Check no_repeat_same_day filter
+                if no_repeat_same_day and meal_type in ('lunch', 'dinner'):
+                    protein_cat = get_recipe_protein_category(opt['recipe'])
+                    if protein_cat and protein_cat in day_proteins:
+                        continue
+
+                candidates.append(opt)
+
+            # Fall back to all options if no candidates pass filters
+            if not candidates:
+                candidates = available
+
+            # Pick one (rotate for variety)
             day_index = DAYS.index(day)
-            pick_index = day_index % len(available)
-            chosen = available[pick_index]
+            pick_index = day_index % len(candidates)
+            chosen = candidates[pick_index]
 
             day_plan[meal_type] = chosen
+
+            # Track protein category
+            protein_cat = get_recipe_protein_category(chosen['recipe'])
+            if protein_cat:
+                day_proteins.append(protein_cat)
 
         weekly_plan[day] = day_plan
 
