@@ -1,0 +1,204 @@
+// FitPlan DSL — Muscle Gain Plan Example
+
+recipe ProteinOatmeal {
+    serves 1
+    time 10 min
+    difficulty easy
+    ingredients {
+        Oats 100 g
+        ProteinPowder 30 g
+        Banana 120 g
+        PeanutButter 20 g
+        Milk 200 ml
+    }
+    steps {
+        step "Cook oats in milk" duration 5 min temperature 100 C
+        step "Stir in protein powder"
+        step "Top with sliced banana and peanut butter"
+    }
+    tags [highProtein, highCalorie, breakfast]
+}
+
+recipe EggOmelette {
+    serves 1
+    time 15 min
+    difficulty easy
+    ingredients {
+        Egg 200 g
+        Cheese 30 g
+        Spinach 50 g
+        Mushroom 50 g
+        Butter 10 g
+    }
+    steps {
+        step "Melt butter in pan" duration 2 min temperature 160 C
+        step "Whisk eggs and pour into pan" duration 3 min temperature 160 C
+        step "Add spinach, mushroom and cheese"
+        step "Fold and cook until set" duration 3 min temperature 140 C
+    }
+    tags [highProtein, lowCarb, breakfast]
+}
+
+recipe ChickenRiceBowl {
+    serves 2
+    time 35 min
+    difficulty easy
+    ingredients {
+        ChickenBreast 400 g
+        BrownRice 250 g
+        Broccoli 200 g
+        OliveOil 15 ml
+        SoySauce 15 ml
+    }
+    steps {
+        step "Cook brown rice" duration 20 min temperature 100 C
+        step "Cut chicken into strips" duration 5 min
+        step "Fry chicken in olive oil" duration 10 min temperature 180 C
+        step "Steam broccoli" duration 5 min temperature 100 C
+        step "Assemble bowl and drizzle with soy sauce"
+    }
+    tags [highProtein, mealPrep]
+}
+
+recipe BeefStirFry {
+    serves 2
+    time 30 min
+    difficulty medium
+    ingredients {
+        LeanBeef 350 g
+        BellPepper 150 g
+        Onion 100 g
+        BrownRice 200 g
+        OliveOil 15 ml
+        Garlic 10 g
+    }
+    steps {
+        step "Cook rice" duration 20 min temperature 100 C
+        step "Slice beef into strips" duration 5 min
+        step "Stir fry beef in olive oil" duration 5 min temperature 200 C
+        step "Add vegetables and garlic" duration 5 min temperature 180 C
+        step "Serve over rice"
+    }
+    tags [highProtein, highCalorie]
+}
+
+recipe SalmonSweetPotato {
+    serves 2
+    time 40 min
+    difficulty medium
+    ingredients {
+        Salmon 350 g
+        SweetPotato 300 g
+        Spinach 100 g
+        OliveOil 15 ml
+    }
+    steps {
+        step "Cube sweet potato and roast" duration 25 min temperature 200 C
+        step "Season salmon and bake" duration 15 min temperature 200 C
+        step "Serve on bed of spinach"
+    }
+    tags [highProtein, omega3]
+}
+
+recipe TunaQuinoaBowl {
+    serves 1
+    time 20 min
+    difficulty easy
+    ingredients {
+        Tuna 200 g
+        Quinoa 150 g
+        Avocado 100 g
+        Tomato 100 g
+        OliveOil 10 ml
+    }
+    steps {
+        step "Cook quinoa" duration 15 min temperature 100 C
+        step "Drain tuna"
+        step "Dice avocado and tomato"
+        step "Assemble bowl and drizzle with olive oil"
+    }
+    tags [highProtein, quickMeal]
+}
+
+recipe ProteinShake {
+    serves 1
+    time 5 min
+    difficulty easy
+    ingredients {
+        ProteinPowder 40 g
+        Banana 100 g
+        PeanutButter 25 g
+        Milk 300 ml
+    }
+    steps {
+        step "Blend all ingredients until smooth"
+    }
+    tags [highProtein, quickMeal, snack]
+}
+
+// MEAL OPTIONS
+
+options breakfast_options {
+    ProteinOatmeal
+    EggOmelette
+}
+
+options lunch_options {
+    ChickenRiceBowl
+    BeefStirFry
+    TunaQuinoaBowl
+}
+
+options dinner_options {
+    SalmonSweetPotato
+    BeefStirFry
+    ChickenRiceBowl
+}
+
+options snack_options {
+    ProteinShake
+}
+
+// WORKOUTS — strength focused
+
+workout UpperBody {
+    type weightlifting
+    duration 75 min
+    intensity high
+    days [Monday, Thursday]
+}
+
+workout LowerBody {
+    type weightlifting
+    duration 75 min
+    intensity high
+    days [Tuesday, Friday]
+}
+
+workout ActiveRecovery {
+    type walking
+    duration 30 min
+    intensity low
+    days [Wednesday, Saturday]
+}
+
+// PLAN
+
+plan MuscleGainPlan {
+    goal muscleGain
+    target_calories 2800 kcal
+    target_macros {
+        protein 35 %
+        carbs 40 %
+        fat 25 %
+    }
+    meals {
+        breakfast from breakfast_options
+        lunch from lunch_options
+        dinner from dinner_options
+        snack from snack_options
+    }
+    filters {
+        no_repeat_same_day
+    }
+}
