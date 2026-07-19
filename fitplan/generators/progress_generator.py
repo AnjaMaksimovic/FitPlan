@@ -282,7 +282,7 @@ function updateDay(dayIdx) {{
             const adjMins = Math.round(s.duration_min * (diff / 200));
             return `${{adjMins}} min ${{s.description}}`;
         }});
-        suggEl.innerHTML = `💡 Over target by ${{diff}} kcal. Try: ${{suggestions.join(' or ')}} to compensate.`;
+        suggEl.innerHTML = `💡 You exceeded your daily target by ${diff} kcal. To compensate, try: ${suggestions.join(' or ')} to burn off the excess.`;
         suggEl.classList.add('visible');
     }} else {{
         suggEl.classList.remove('visible');
