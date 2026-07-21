@@ -19,6 +19,7 @@ dependencies = [
     "textX>=3.0.0",
     "Jinja2>=3.0.0",
     "click>=8.0.0",
+    "requests>=2.20.0",
 ]
 
 [project.optional-dependencies]
@@ -33,3 +34,6 @@ fitplan = "fitplan.main:fitplan_language"
 [project.entry-points."textx_generators"]
 fitplan_html = "fitplan.generators.html_generator:html_generator"
 fitplan_md = "fitplan.generators.md_generator:md_generator"
+fitplan_shopping = "fitplan.generators.shopping_generator:shopping_generator"
+fitplan_progress = "fitplan.generators.progress_generator:progress_generator"
+fitplan_nutrition = "fitplan.generators.nutrition_generator:nutrition_generator"

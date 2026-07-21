@@ -1,0 +1,28 @@
+grammar:
+  - changed-files:
+    - any-glob-to-any-file: 'fitplan/grammars/**'
+
+generator:
+  - changed-files:
+    - any-glob-to-any-file: 'fitplan/generators/**'
+
+validation:
+  - changed-files:
+    - any-glob-to-any-file: 'fitplan/validators.py'
+
+smart-feature:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'fitplan/ingredient_api.py'
+      - 'fitplan/workout_calc.py'
+      - 'fitplan/plan_generator.py'
+
+example:
+  - changed-files:
+    - any-glob-to-any-file: 'examples/**'
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'README.md'
+      - '*.md'
