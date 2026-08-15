@@ -11,3 +11,6 @@ examples/*.html
 examples/*.md
 examples/test_*.fitplan
 .ingredient_cache/
+vscode-extension/node_modules/
+vscode-extension/out/
+vscode-extension/*.vsix
