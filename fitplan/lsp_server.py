@@ -250,5 +250,87 @@ def hover(params: HoverParams):
 
     return None
 
+    # =====================================================================
+# DIAGNOSTICS
+# =====================================================================
+
+def validate_document(source: str) -> list:
+    """Parses and validates .fitplan source, returns list of Diagnostic."""
+    diagnostics = []
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".fitplan", delete=False, encoding="utf-8"
+    ) as tmp:
+        tmp.write(source)
+        tmp_path = tmp.name
+
+    try:
+        from .main import parse_model
+        model, warnings = parse_model(tmp_path)
+
+        if model is None:
+            diagnostics.append(
+                Diagnostic(
+                    range=Range(
+                        start=Position(line=0, character=0),
+                        end=Position(line=0, character=1)
+                    ),
+                    message="Syntax or validation error — check the file for issues.",
+                    severity=DiagnosticSeverity.Error,
+                    source="fitplan"
+                )
+            )
+
+        if warnings:
+            for w in warnings:
+                diagnostics.append(
+                    Diagnostic(
+                        range=Range(
+                            start=Position(line=0, character=0),
+                            end=Position(line=0, character=1)
+                        ),
+                        message=w,
+                        severity=DiagnosticSeverity.Warning,
+                        source="fitplan"
+                    )
+                )
+
+    except Exception as e:
+        diagnostics.append(
+            Diagnostic(
+                range=Range(
+                    start=Position(line=0, character=0),
+                    end=Position(line=0, character=1)
+                ),
+                message=str(e),
+                severity=DiagnosticSeverity.Error,
+                source="fitplan"
+            )
+        )
+    finally:
+        os.unlink(tmp_path)
+
+    return diagnostics
+
+
+@server.feature(TEXT_DOCUMENT_DID_OPEN)
+def did_open(params: DidOpenTextDocumentParams):
+    doc = server.workspace.text_documents.get(params.text_document.uri)
+    if doc:
+        diagnostics = validate_document(doc.source)
+        server.text_document_publish_diagnostics(
+            params.text_document.uri, diagnostics
+        )
+
+
+@server.feature(TEXT_DOCUMENT_DID_CHANGE)
+def did_change(params: DidChangeTextDocumentParams):
+    doc = server.workspace.text_documents.get(params.text_document.uri)
+    if doc:
+        diagnostics = validate_document(doc.source)
+        server.text_document_publish_diagnostics(
+            params.text_document.uri, diagnostics
+        )
+
 if __name__ == "__main__":
     server.start_io()
