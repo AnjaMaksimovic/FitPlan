@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "FitPlan",
+  "scopeName": "source.fitplan",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#enums" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#units" },
+    { "include": "#identifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "name": "comment.line.double-slash.fitplan",
+      "match": "//.*$"
+    },
+    "keywords": {
+      "name": "keyword.control.fitplan",
+      "match": "\\b(ingredient|recipe|options|workout|plan|serves|time|difficulty|ingredients|steps|step|tags|goal|target_calories|target_macros|protein|carbs|fat|fiber|meals|filters|type|duration|intensity|days|burns|from|per|allergens|category|no_repeat_same_day|max_per_week|servings)\\b"
+    },
+    "enums": {
+      "name": "support.constant.fitplan",
+      "match": "\\b(easy|medium|hard|weightLoss|muscleGain|maintenance|endurance|running|cycling|swimming|weightlifting|yoga|pilates|hiit|walking|rowing|elliptical|hiking|other|low|high|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|breakfast|lunch|dinner|snack|meat|fish|dairy|vegetable|fruit|grain|legume|sweetener)\\b"
+    },
+    "strings": {
+      "name": "string.quoted.double.fitplan",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.fitplan",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric.fitplan",
+      "match": "\\b\\d+(\\.\\d+)?\\b"
+    },
+    "units": {
+      "name": "storage.type.fitplan",
+      "match": "\\b(kcal|min|g|kg|ml|l|tbsp|tsp|piece|pieces|C|%)\\b"
+    },
+    "identifiers": {
+      "name": "variable.other.fitplan",
+      "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+    }
+  }
+}
