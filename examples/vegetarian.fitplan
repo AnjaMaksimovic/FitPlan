@@ -1,0 +1,197 @@
+// FitPlan DSL — Vegetarian Plan Example
+
+recipe OatmealWithNuts {
+    serves 1
+    time 10 min
+    difficulty easy
+    ingredients {
+        Oats 90 g
+        AlmondMilk 250 ml
+        Banana 100 g
+        Walnuts 20 g
+        Honey 10 g
+    }
+    steps {
+        step "Cook oats in almond milk" duration 5 min temperature 100 C
+        step "Slice banana and top with walnuts and honey"
+    }
+    tags [vegetarian, highFiber, breakfast]
+}
+
+recipe TofuScramble {
+    serves 2
+    time 20 min
+    difficulty easy
+    ingredients {
+        Tofu 300 g
+        Spinach 100 g
+        Tomato 100 g
+        Onion 60 g
+        OliveOil 15 ml
+        Garlic 5 g
+    }
+    steps {
+        step "Crumble tofu with hands" duration 2 min
+        step "Saute onion and garlic in olive oil" duration 3 min temperature 160 C
+        step "Add tofu and cook until golden" duration 5 min temperature 180 C
+        step "Add spinach and tomato, stir until wilted" duration 3 min temperature 160 C
+    }
+    tags [vegan, highProtein, breakfast]
+}
+
+recipe LentilSoupVeg {
+    serves 3
+    time 45 min
+    difficulty easy
+    ingredients {
+        Lentils 250 g
+        Carrot 150 g
+        Onion 100 g
+        Tomato 200 g
+        OliveOil 15 ml
+        Garlic 10 g
+        SweetPotato 150 g
+    }
+    steps {
+        step "Dice all vegetables" duration 10 min
+        step "Saute onion and garlic in olive oil" duration 5 min temperature 160 C
+        step "Add carrots, sweet potato and lentils"
+        step "Add tomatoes and cover with water"
+        step "Simmer until lentils are tender" duration 25 min temperature 100 C
+    }
+    tags [vegan, highFiber, highProtein]
+}
+
+recipe ChickpeaCurry {
+    serves 3
+    time 35 min
+    difficulty medium
+    ingredients {
+        Chickpeas 300 g
+        Tomato 200 g
+        Onion 100 g
+        OliveOil 15 ml
+        Garlic 10 g
+        BrownRice 200 g
+    }
+    steps {
+        step "Cook rice" duration 20 min temperature 100 C
+        step "Saute onion and garlic" duration 5 min temperature 160 C
+        step "Add chickpeas and tomato, simmer" duration 15 min temperature 140 C
+        step "Serve over rice"
+    }
+    tags [vegan, highProtein, highFiber]
+}
+
+recipe QuinoaVegetableBowl {
+    serves 2
+    time 30 min
+    difficulty easy
+    ingredients {
+        Quinoa 180 g
+        BellPepper 150 g
+        Zucchini 150 g
+        Tomato 100 g
+        OliveOil 15 ml
+        Avocado 100 g
+    }
+    steps {
+        step "Cook quinoa" duration 15 min temperature 100 C
+        step "Roast peppers and zucchini with olive oil" duration 15 min temperature 200 C
+        step "Slice avocado and tomato"
+        step "Assemble bowl"
+    }
+    tags [vegan, glutenFree, highFiber]
+}
+
+recipe BlackBeanTacos {
+    serves 2
+    time 20 min
+    difficulty easy
+    ingredients {
+        BlackBeans 250 g
+        BellPepper 100 g
+        Onion 80 g
+        Tomato 100 g
+        OliveOil 10 ml
+        Avocado 80 g
+    }
+    steps {
+        step "Saute onion and peppers" duration 5 min temperature 160 C
+        step "Add black beans and heat through" duration 5 min temperature 140 C
+        step "Serve topped with tomato and avocado"
+    }
+    tags [vegan, highFiber, quickMeal]
+}
+
+recipe GreekYogurtParfait {
+    serves 1
+    time 5 min
+    difficulty easy
+    ingredients {
+        GreekYogurt 200 g
+        Blueberry 80 g
+        Almonds 25 g
+        Honey 10 g
+    }
+    steps {
+        step "Layer yogurt in a glass"
+        step "Top with blueberries, almonds and honey"
+    }
+    tags [vegetarian, highProtein, quickMeal]
+}
+
+options breakfast_options {
+    OatmealWithNuts
+    TofuScramble servings 1
+    GreekYogurtParfait
+}
+
+options lunch_options {
+    ChickpeaCurry servings 1
+    QuinoaVegetableBowl
+    LentilSoupVeg servings 1
+}
+
+options dinner_options {
+    LentilSoupVeg servings 1
+    BlackBeanTacos
+    ChickpeaCurry servings 1
+}
+
+options snack_options {
+    GreekYogurtParfait
+}
+
+workout YogaFlow {
+    type yoga
+    duration 60 min
+    intensity medium
+    days [Monday, Wednesday, Friday]
+}
+
+workout LightCardio {
+    type walking
+    duration 45 min
+    intensity medium
+    days [Tuesday, Thursday, Saturday]
+}
+
+plan VegetarianMaintenancePlan {
+    goal maintenance
+    target_calories 2000 kcal
+    target_macros {
+        protein 25 %
+        carbs 50 %
+        fat 25 %
+    }
+    meals {
+        breakfast from breakfast_options
+        lunch from lunch_options
+        dinner from dinner_options
+        snack from snack_options
+    }
+    filters {
+        no_repeat_same_day
+    }
+}

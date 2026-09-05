@@ -202,6 +202,9 @@ Filters control how meals are distributed across the week:
 |---|---|---|
 | HTML | `--target html` | Styled web page with recipe cards and auto-generated weekly plan |
 | Markdown | `--target md` | Weekly schedule with recipes, workouts, and summary statistics |
+| Nutrition Report | `--target nutrition` | Daily calorie and macro comparison against targets with ✅⬇️⬆️ indicators |
+| Shopping List | `--target shopping` | Aggregated ingredients for the week, grouped by category, with interactive checkboxes |
+| Progress Tracker | `--target progress` | Interactive HTML where users log meals, track workouts, add extra food, and get activity suggestions for calorie overages |
 
 ### Progress Tracker Features
 
@@ -230,6 +233,19 @@ The progress tracker generates an interactive HTML page where users can:
 ## 7. VS Code Support
 
 The project includes a VS Code extension with syntax highlighting for `.fitplan` files, context-aware code completion via LSP server (e.g. offering defined ingredient names inside a recipe block), hover documentation for keywords, and real-time error diagnostics.
+
+### Features
+- Syntax highlighting for all language keywords, enums and identifiers
+- Code completion (Ctrl+Space) — context-aware suggestions based on cursor position
+- Hover documentation — hover over any keyword to see description and examples
+- Real-time error diagnostics — errors and warnings shown as you type
+
+### Installation
+
+1. Open the `vscode-extension/` folder in VS Code
+2. Run `npm install` in that folder
+3. Press `F5` to launch Extension Development Host
+4. Open any `.fitplan` file
 
 ## Installation
 
@@ -291,12 +307,21 @@ textx list-languages
 ## Usage
 
 ```bash
-# Generate HTML page with recipe cards and weekly plan
+# Generate all outputs from an example plan
 textx generate examples/weight_loss.fitplan --target html --overwrite
-
-# Generate Markdown weekly schedule
 textx generate examples/weight_loss.fitplan --target md --overwrite
+textx generate examples/weight_loss.fitplan --target nutrition --overwrite
+textx generate examples/weight_loss.fitplan --target shopping --overwrite
+textx generate examples/weight_loss.fitplan --target progress --overwrite
 ```
+
+## Examples
+
+| File | Description |
+|---|---|
+| `examples/weight_loss.fitplan` | Weight loss plan — 9 recipes, 3 workouts, 1800 kcal target |
+| `examples/muscle_gain.fitplan` | Muscle gain plan — high protein recipes, strength training focus |
+| `examples/vegetarian.fitplan` | Vegetarian maintenance plan — plant-based recipes, yoga and walking |
 
 ## Contributors
 
