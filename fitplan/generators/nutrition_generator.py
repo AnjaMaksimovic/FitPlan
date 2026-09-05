@@ -12,6 +12,7 @@ from textx import generator
 from ..main import parse_model
 from ..nutrition_calc import calc_nutrition_for_day, calc_nutrition_for_recipe
 from ..plan_generator import generate_weekly_plan, get_workouts_for_day, DAYS
+from ..workout_calc import get_workout_calories
 
 THIS_FOLDER = dirname(dirname(__file__))
 
@@ -81,10 +82,10 @@ def nutrition_generator(metamodel, model, output_path, overwrite, debug, **kwarg
         diff_color = '#e53e3e' if diff > 200 else ('#38a169' if diff < -50 else '#d69e2e')
 
         day_workouts = get_workouts_for_day(workouts, day)
-        workout_burns = sum(w.burns for w in day_workouts if w.burns)
+        workout_burns = sum(get_workout_calories(w) for w in day_workouts)
         net_kcal = dn['calories'] - workout_burns
 
-        workout_str = ', '.join(f"{w.type} ({w.burns} kcal)" for w in day_workouts) if day_workouts else '—'
+        workout_str = ', '.join(f"{w.type} ({get_workout_calories(w)} kcal)" for w in day_workouts) if day_workouts else '—'
 
         rows_html += f"""
         <tr>

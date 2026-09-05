@@ -164,8 +164,8 @@
                     </div>
                     {% endif %}
                     {% endfor %}
-                    {% for w in day_workouts %}
-                    <div class="workout-row">🏋️ {{ w.name }} · {{ w.duration }} min · -{{ w.burns if w.burns else '~' }} kcal</div>
+                    {% for w, burns in day_workouts %}
+                    <div class="workout-row">🏋️ {{ w.name }} · {{ w.duration }} min · -{{ burns }} kcal</div>
                     {% endfor %}
                     <div class="day-total">
                         {{ day_nutrition.calories | round(0) | int }} kcal eaten

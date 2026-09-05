@@ -12,6 +12,7 @@ from textx import generator
 from ..main import parse_model
 from ..nutrition_calc import calc_nutrition_for_day, calc_nutrition_for_recipe
 from ..plan_generator import generate_weekly_plan, get_workouts_for_day, DAYS
+from ..workout_calc import get_workout_calories
 
 WORKOUT_EMOJI = {
     'running': '🏃', 'cycling': '🚴', 'swimming': '🏊', 'weightlifting': '🏋️',
@@ -115,7 +116,7 @@ def md_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
             day_workouts = get_workouts_for_day(workouts, day)
 
             lines.append(f'#### {day}\n')
-            workout_burns = sum(w.burns if w.burns else 0 for w in day_workouts)
+            workout_burns = sum(get_workout_calories(w) for w in day_workouts)
             net_kcal = day_kcal - workout_burns
             meal_table = ['| Meal | Recipe | Calories |', '|---|---|---|']
             for meal_type in ['breakfast', 'lunch', 'dinner', 'snack']:
@@ -132,8 +133,8 @@ def md_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
             if day_workouts:
                 for w in day_workouts:
                     emoji = WORKOUT_EMOJI.get(w.type, '💪')
-                    burns = f' · -{w.burns} kcal' if w.burns else ''
-                    lines.append(f'**Workout:** {emoji} {w.name} · {w.duration} min · {w.intensity}{burns}')
+                    burns = get_workout_calories(w)
+                    lines.append(f'**Workout:** {emoji} {w.name} · {w.duration} min · {w.intensity} · -{burns} kcal')
                 lines.append('')
 
             diff = net_kcal - plan.target_calories

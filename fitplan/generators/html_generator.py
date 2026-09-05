@@ -14,6 +14,7 @@ from textx import generator
 from ..main import parse_model
 from ..nutrition_calc import calc_nutrition_for_recipe, calc_nutrition_for_day
 from ..plan_generator import generate_weekly_plan, get_workouts_for_day, DAYS
+from ..workout_calc import get_workout_calories
 
 THIS_FOLDER = dirname(dirname(__file__))
 
@@ -57,9 +58,10 @@ def html_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
             day_plan = weekly.get(day, {})
             day_nutrition = calc_nutrition_for_day(day_plan, custom_ingredients)
             day_workouts = get_workouts_for_day(workouts, day)
-            workout_burns = sum(w.burns if w.burns else 0 for w in day_workouts)
+            day_workouts_with_burns = [(w, get_workout_calories(w)) for w in day_workouts]
+            workout_burns = sum(burns for _, burns in day_workouts_with_burns)
             net_kcal = day_nutrition['calories'] - workout_burns
-            day_details.append((day, day_plan, day_nutrition, day_workouts, workout_burns, net_kcal))
+            day_details.append((day, day_plan, day_nutrition, day_workouts_with_burns, workout_burns, net_kcal))
         plan_data.append((plan, day_details))
 
     # Render Jinja2 template
