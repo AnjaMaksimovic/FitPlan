@@ -13,6 +13,7 @@ Usage:
 
 import os
 import json
+import hashlib
 from datetime import datetime
 from os.path import dirname, join
 
@@ -43,7 +44,7 @@ def progress_generator(metamodel, model, output_path, overwrite, debug, **kwargs
 
     fitplan_model, warnings = parse_model(input_file)
     if fitplan_model is None:
-        return
+        raise click.ClickException('Invalid FitPlan input; no output generated.')
 
     declarations = fitplan_model.declarations
     custom_ingredients = [d for d in declarations if d.__class__.__name__ == 'Ingredient']
@@ -97,6 +98,9 @@ def progress_generator(metamodel, model, output_path, overwrite, debug, **kwargs
     # Suggestion data
     suggestions = suggest_activity_for_excess(200)  # Base for 200 kcal excess
     suggestions_json = json.dumps(suggestions[:3])
+    storage_key = 'fitplan-progress-v1-' + hashlib.sha256(
+        json.dumps([plan.name, target_kcal, days_json], sort_keys=True).encode('utf-8')
+    ).hexdigest()
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -123,7 +127,15 @@ header h1{{font-size:1.8rem;margin-bottom:.3rem}}header p{{opacity:.85}}
 .workout-name{{flex:1;font-size:.9rem;color:#2b6cb0}}.workout-burns{{font-weight:600;color:#e53e3e;font-size:.85rem}}
 .extra-meal{{margin-top:.5rem;display:flex;gap:.5rem}}
 .extra-meal input{{flex:1;padding:.4rem .6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.85rem}}
+.extra-meal input{{min-width:0}}
+.input-error,#storageNotice{{color:#c53030;font-size:.85rem;margin:.5rem 0}}
+@media(max-width:550px){{.summary-grid{{grid-template-columns:repeat(2,1fr)}}.extra-meal{{flex-wrap:wrap}}}}
 .extra-meal button{{padding:.4rem .8rem;background:#38a169;color:white;border:none;border-radius:6px;cursor:pointer;font-size:.85rem}}
+.progress-button{{display:inline-flex;align-items:center;justify-content:center;padding:.7rem 1.2rem;border:1px solid #2f855a;border-radius:999px;background:linear-gradient(135deg,#38a169,#2f855a);color:white;font:600 .9rem 'Segoe UI',sans-serif;cursor:pointer;box-shadow:0 3px 8px rgba(39,103,73,.16);transition:background .2s,box-shadow .2s,transform .2s}}
+.progress-button:hover{{background:linear-gradient(135deg,#2f855a,#276749);box-shadow:0 5px 12px rgba(39,103,73,.24);transform:translateY(-1px)}}
+.progress-button:active{{transform:translateY(0);box-shadow:none}}
+.progress-button:focus-visible{{outline:3px solid #68d391;outline-offset:3px}}
+.progress-button.remove-button{{padding:.35rem .8rem;font-size:.8rem;flex-shrink:0}}
 .balance-bar{{margin-top:1rem;background:#e2e8f0;border-radius:8px;height:24px;overflow:hidden;position:relative}}
 .balance-fill{{height:100%;border-radius:8px;transition:width .3s}}
 .balance-fill.under{{background:linear-gradient(90deg,#68d391,#38a169)}}
@@ -156,6 +168,8 @@ footer{{text-align:center;color:#a0aec0;font-size:.8rem;margin-top:2rem}}
 </div>
 </div>
 
+<button class="progress-button" onclick="resetProgress()">Reset progress</button>
+<p id="storageNotice" role="status"></p>
 <div id="daysContainer"></div>
 
 <footer>FitPlan DSL Progress Tracker · {datetime.now().strftime('%Y')}</footer>
@@ -164,6 +178,7 @@ footer{{text-align:center;color:#a0aec0;font-size:.8rem;margin-top:2rem}}
 const TARGET = {target_kcal};
 const DAYS_DATA = {json.dumps(days_json)};
 const SUGGESTIONS_BASE = {suggestions_json};
+const STORAGE_KEY = {json.dumps(storage_key)};
 
 function renderDays() {{
     const container = document.getElementById('daysContainer');
@@ -176,8 +191,8 @@ function renderDays() {{
         let mealsHtml = '';
         day.meals.forEach((m, mIdx) => {{
             mealsHtml += `
-            <div class="meal-row" id="meal-${{dayIdx}}-${{mIdx}}">
-                <input type="checkbox" onchange="toggleMeal(${{dayIdx}},${{mIdx}},this.checked)">
+            <div class="meal-row ${{state[dayIdx].mealsChecked[mIdx] ? 'done' : ''}}" id="meal-${{dayIdx}}-${{mIdx}}">
+                <input type="checkbox" ${{state[dayIdx].mealsChecked[mIdx] ? 'checked' : ''}} onchange="toggleMeal(${{dayIdx}},${{mIdx}},this.checked)">
                 <span class="meal-name">${{m.type.charAt(0).toUpperCase() + m.type.slice(1)}}: ${{m.name}}</span>
                 <span class="meal-kcal">${{m.kcal}} kcal</span>
             </div>`;
@@ -186,8 +201,8 @@ function renderDays() {{
         let workoutsHtml = '';
         day.workouts.forEach((w, wIdx) => {{
             workoutsHtml += `
-            <div class="workout-row" id="workout-${{dayIdx}}-${{wIdx}}">
-                <input type="checkbox" onchange="toggleWorkout(${{dayIdx}},${{wIdx}},this.checked)">
+            <div class="workout-row ${{state[dayIdx].workoutsChecked[wIdx] ? 'done' : ''}}" id="workout-${{dayIdx}}-${{wIdx}}">
+                <input type="checkbox" ${{state[dayIdx].workoutsChecked[wIdx] ? 'checked' : ''}} onchange="toggleWorkout(${{dayIdx}},${{wIdx}},this.checked)">
                 <span class="workout-name">🏋️ ${{w.name}} · ${{w.duration}} min</span>
                 <span class="workout-burns">-${{w.burns}} kcal</span>
             </div>`;
@@ -201,30 +216,101 @@ function renderDays() {{
         <div class="day-body">
             <div class="section-label">🍽 Meals</div>
             ${{mealsHtml}}
+            <div id="extras-${{dayIdx}}"></div>
             <div class="extra-meal">
                 <input type="text" placeholder="Extra meal name" id="extraName-${{dayIdx}}">
-                <input type="number" placeholder="kcal" id="extraKcal-${{dayIdx}}" style="width:80px">
+                <input type="number" min="1" step="1" placeholder="kcal" aria-label="Extra meal calories" id="extraKcal-${{dayIdx}}" style="width:80px">
                 <button onclick="addExtra(${{dayIdx}})">+</button>
             </div>
+            <p class="input-error" id="error-${{dayIdx}}" role="alert"></p>
             ${{day.workouts.length ? '<div class="section-label">🏋️ Workouts</div>' + workoutsHtml : ''}}
             <div class="balance-bar"><div class="balance-fill" id="bar-${{dayIdx}}"></div></div>
             <div class="balance-text" id="balanceText-${{dayIdx}}"></div>
             <div class="suggestion" id="suggestion-${{dayIdx}}"></div>
         </div>`;
         container.appendChild(card);
+        renderExtras(dayIdx);
     }});
     updateAll();
 }}
 
 // State tracking
-const state = DAYS_DATA.map(day => ({{
+function freshState() {{ return DAYS_DATA.map(day => ({{
     mealsChecked: day.meals.map(() => false),
     workoutsChecked: day.workouts.map(() => false),
     extraMeals: [],
-}}));
+}})); }}
+
+function loadState() {{
+    const initial = freshState();
+    try {{
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!Array.isArray(saved) || saved.length !== initial.length) return initial;
+        return initial.map((day, i) => {{
+            const entry = saved[i] || {{}};
+            return {{
+                mealsChecked: day.mealsChecked.map((_, j) => entry.mealsChecked?.[j] === true),
+                workoutsChecked: day.workoutsChecked.map((_, j) => entry.workoutsChecked?.[j] === true),
+                extraMeals: Array.isArray(entry.extraMeals) ? entry.extraMeals.filter(e =>
+                    e && typeof e.name === 'string' && e.name.trim() &&
+                    Number.isSafeInteger(e.kcal) && e.kcal > 0) : [],
+            }};
+        }});
+    }} catch (error) {{
+        document.getElementById('storageNotice').textContent = 'Saved progress could not be loaded. Starting with an empty tracker.';
+        return initial;
+    }}
+}}
+
+let state = loadState();
+
+function saveState() {{
+    try {{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        document.getElementById('storageNotice').textContent = '';
+    }} catch (error) {{
+        document.getElementById('storageNotice').textContent = 'Progress cannot be saved in this browser. Keep this page open to retain your entries.';
+    }}
+}}
+
+function resetProgress() {{
+    if (!confirm('Clear all meals and workouts for this plan?')) return;
+    state = freshState();
+    saveState();
+    renderDays();
+}}
+
+function renderExtras(dayIdx) {{
+    const container = document.getElementById(`extras-${{dayIdx}}`);
+    container.innerHTML = '';
+    state[dayIdx].extraMeals.forEach((meal, index) => {{
+        const row = document.createElement('div');
+        row.className = 'meal-row';
+        const label = document.createElement('span');
+        label.className = 'meal-name';
+        label.textContent = meal.name;
+        const calories = document.createElement('span');
+        calories.className = 'meal-kcal';
+        calories.textContent = `${{meal.kcal}} kcal`;
+        const button = document.createElement('button');
+        button.className = 'progress-button remove-button';
+        button.textContent = 'Remove';
+        button.onclick = () => removeExtra(dayIdx, index);
+        row.append(label, calories, button);
+        container.appendChild(row);
+    }});
+}}
+
+function removeExtra(dayIdx, index) {{
+    state[dayIdx].extraMeals.splice(index, 1);
+    saveState();
+    renderExtras(dayIdx);
+    updateAll();
+}}
 
 function toggleMeal(dayIdx, mealIdx, checked) {{
     state[dayIdx].mealsChecked[mealIdx] = checked;
+    saveState();
     document.getElementById(`meal-${{dayIdx}}-${{mealIdx}}`).classList.toggle('done', checked);
     updateDay(dayIdx);
     updateSummary();
@@ -232,6 +318,7 @@ function toggleMeal(dayIdx, mealIdx, checked) {{
 
 function toggleWorkout(dayIdx, wIdx, checked) {{
     state[dayIdx].workoutsChecked[wIdx] = checked;
+    saveState();
     document.getElementById(`workout-${{dayIdx}}-${{wIdx}}`).classList.toggle('done', checked);
     updateDay(dayIdx);
     updateSummary();
@@ -241,11 +328,18 @@ function addExtra(dayIdx) {{
     const nameEl = document.getElementById(`extraName-${{dayIdx}}`);
     const kcalEl = document.getElementById(`extraKcal-${{dayIdx}}`);
     const name = nameEl.value.trim();
-    const kcal = parseInt(kcalEl.value);
-    if (!name || !kcal) return;
+    const kcal = Number(kcalEl.value);
+    const errorEl = document.getElementById(`error-${{dayIdx}}`);
+    if (!name || !Number.isSafeInteger(kcal) || kcal <= 0) {{
+        errorEl.textContent = 'Enter a meal name and a positive whole number of calories.';
+        return;
+    }}
+    errorEl.textContent = '';
     state[dayIdx].extraMeals.push({{ name, kcal }});
     nameEl.value = ''; kcalEl.value = '';
-    renderDays();
+    saveState();
+    renderExtras(dayIdx);
+    updateAll();
 }}
 
 function updateDay(dayIdx) {{
@@ -261,7 +355,7 @@ function updateDay(dayIdx) {{
 
     const net = consumed - burned;
     const diff = net - TARGET;
-    const pct = Math.min((net / TARGET) * 100, 150);
+    const pct = Math.max(0, Math.min((net / TARGET) * 100, 100));
 
     const bar = document.getElementById(`bar-${{dayIdx}}`);
     bar.style.width = pct + '%';
@@ -269,10 +363,10 @@ function updateDay(dayIdx) {{
 
     const diffStr = diff > 0 ? `+${{diff}}` : `${{diff}}`;
     document.getElementById(`balanceText-${{dayIdx}}`).textContent =
-        consumed > 0 ? `${{consumed}} eaten - ${{burned}} burned = ${{net}} net (${{diffStr}} from target)` : 'No meals logged yet';
+        consumed > 0 || burned > 0 ? `${{consumed}} eaten - ${{burned}} burned = ${{net}} net (${{diffStr}} from target)` : 'No meals logged yet';
 
     document.getElementById(`status-${{dayIdx}}`).textContent =
-        consumed > 0 ? `${{net}} / ${{TARGET}} kcal` : '—';
+        consumed > 0 || burned > 0 ? `${{net}} / ${{TARGET}} kcal` : '—';
 
     // Show suggestion if over target
     const suggEl = document.getElementById(`suggestion-${{dayIdx}}`);
@@ -296,6 +390,7 @@ function updateSummary() {{
         let dayConsumed = 0;
         s.mealsChecked.forEach((checked, j) => {{ if (checked) {{ totalMeals++; dayConsumed += day.meals[j].kcal; }} }});
         s.extraMeals.forEach(e => dayConsumed += e.kcal);
+        totalMeals += s.extraMeals.length;
         s.workoutsChecked.forEach((checked, j) => {{ if (checked) {{ totalWorkouts++; totalBurned += day.workouts[j].burns; }} }});
         totalConsumed += dayConsumed;
         if (dayConsumed > 0) daysWithData++;

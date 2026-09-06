@@ -67,6 +67,12 @@
     .plan-footer { padding: 1rem 1.5rem; background: #f0fff4; border-top: 1px solid #c6f6d5; font-size: 0.85rem; color: #4a5568; }
 
     footer { text-align: center; padding: 2rem; color: #a0aec0; font-size: 0.85rem; margin-top: 3rem; }
+    @media(max-width:600px) {
+        .recipe-grid, .days-grid { grid-template-columns: minmax(0, 1fr); }
+        .recipe-meta, nav { flex-wrap: wrap; }
+        .nutrition-summary { grid-template-columns: repeat(2, 1fr); }
+        .recipe-card, .day-card { overflow-wrap: anywhere; }
+    }
 </style>
 </head>
 <body>
@@ -97,6 +103,7 @@
                 </div>
             </div>
             <div class="recipe-body">
+                <p>Nutrition per serving</p>
                 <div class="nutrition-summary">
                     <div class="nut-box"><div class="value">{{ nutrition.calories | round(0) | int }}</div><div class="label">kcal</div></div>
                     <div class="nut-box"><div class="value">{{ nutrition.protein | round(1) }}g</div><div class="label">protein</div></div>
@@ -104,7 +111,7 @@
                     <div class="nut-box"><div class="value">{{ nutrition.fat | round(1) }}g</div><div class="label">fat</div></div>
                 </div>
                 <div class="ingredients-list">
-                    <h4>🛒 Ingredients</h4>
+                    <h4>🛒 Ingredients (whole recipe, {{ recipe.serves }} servings)</h4>
                     <ul>
                     {% for item in recipe.items %}
                         <li><span>{{ item.ingredient }}</span><span>{{ item.amount }} {{ item.unit }}</span></li>
@@ -160,6 +167,7 @@
                         <div>
                             <div class="meal-type">{{ meal_type }}</div>
                             <div>{{ day_plan[meal_type].recipe.name }}</div>
+                            <div>{{ day_plan[meal_type].servings }} serving(s)</div>
                         </div>
                     </div>
                     {% endif %}

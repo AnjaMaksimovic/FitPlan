@@ -42,7 +42,7 @@ def md_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
 
     fitplan_model, warnings = parse_model(input_file)
     if fitplan_model is None:
-        return
+        raise click.ClickException('Invalid FitPlan input; no output generated.')
 
     declarations = fitplan_model.declarations
     custom_ingredients = [d for d in declarations if d.__class__.__name__ == 'Ingredient']
@@ -87,7 +87,7 @@ def md_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
         lines.append('## 🏋️ Workout Schedule\n')
         for w in workouts:
             emoji = WORKOUT_EMOJI.get(w.type, '💪')
-            burns_str = f' · Burns ~{w.burns} kcal' if w.burns else ''
+            burns_str = f' · Burns ~{get_workout_calories(w)} kcal'
             lines.append(f'- {emoji} **{w.name}** — {w.type}, {w.duration} min, {w.intensity} intensity{burns_str}')
             lines.append(f'  - Days: {", ".join(w.days)}')
         lines.append('\n---\n')
@@ -118,15 +118,15 @@ def md_generator(metamodel, model, output_path, overwrite, debug, **kwargs):
             lines.append(f'#### {day}\n')
             workout_burns = sum(get_workout_calories(w) for w in day_workouts)
             net_kcal = day_kcal - workout_burns
-            meal_table = ['| Meal | Recipe | Calories |', '|---|---|---|']
+            meal_table = ['| Meal | Recipe | Servings | Calories |', '|---|---|---|---|']
             for meal_type in ['breakfast', 'lunch', 'dinner', 'snack']:
                 if meal_type in day_plan:
                     recipe = day_plan[meal_type]['recipe']
                     servings = day_plan[meal_type].get('servings', 1)
                     kcal = calc_nutrition_for_recipe(recipe, custom_ingredients, servings)['calories']
                     emoji = {'breakfast': '🌅', 'lunch': '☀️', 'dinner': '🌙', 'snack': '🍎'}[meal_type]
-                    meal_table.append(f'| {emoji} {meal_type.capitalize()} | {recipe.name} | {kcal:.0f} kcal |')
-            meal_table.append(f'| **Total** | | **{day_kcal:.0f} eaten / {net_kcal:.0f} net** |')
+                    meal_table.append(f'| {emoji} {meal_type.capitalize()} | {recipe.name} | {servings} | {kcal:.0f} kcal |')
+            meal_table.append(f'| **Total** | | | **{day_kcal:.0f} eaten / {net_kcal:.0f} net** |')
             lines.extend(meal_table)
             lines.append('')
 

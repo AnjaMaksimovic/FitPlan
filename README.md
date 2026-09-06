@@ -210,10 +210,29 @@ Filters control how meals are distributed across the week:
 
 The progress tracker generates an interactive HTML page where users can:
 - Check off completed meals and workouts
-- Add unplanned extra meals with calorie counts
+- Add unplanned extra meals with a name and a positive whole-number calorie count; empty, zero, negative, and fractional calorie inputs are rejected with a message
+- Keep meal and workout checkboxes selected when adding extra meals
+- See each extra meal in the list and delete it with **Remove**; extra meals are included in **Meals Logged**
 - See a real-time daily calorie balance bar (green = on target, red = over)
 - Get automatic activity suggestions when exceeding the target (e.g. "Over by 200 kcal - try 23 min moderate running to compensate")
 - View weekly summary statistics (total meals logged, workouts completed, average daily calories)
+- Restore checked meals, workouts, and extra meals after refreshing in the same browser/profile using local storage; a message appears if browser storage is unavailable
+- Clear the current plan's entries with **Reset progress**, after confirmation
+
+Refreshing the page does not reset progress. Use **Reset progress** for a clean test. **Avg kcal/day** averages consumed calories over days with food logged. Saved entries belong to the generated plan; changing its target or schedule starts a separate saved state. Progress entries do not modify the source DSL or other reports.
+
+### Testing Progress on Windows
+
+From the project root in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force demo_output
+.\venv\Scripts\textx.exe generate examples/weight_loss.fitplan --target progress --output-path demo_output --overwrite
+Start-Process .\demo_output\weight_loss_progress.html
+```
+
+If the page is already open, press **Ctrl+F5** to load the updated HTML. Check a meal and workout, add an extra meal, refresh, and confirm that the entries remain. Remove the extra meal and confirm that its calories and meal count are deducted. Try a negative calorie value and confirm that it is rejected.
+
 
 ## 6. Validations
 

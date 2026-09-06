@@ -1,6 +1,8 @@
 from .ingredient_db import BUILTIN_INGREDIENTS
 def validate_ingredient_values(ingredient):
     """Nutritional values cannot be negative."""
+    if ingredient.amount <= 0:
+        raise ValueError(f"Ingredient '{ingredient.name}': reference amount must be positive")
     for field in ['calories', 'protein', 'carbs', 'fat']:
         if getattr(ingredient, field) < 0:
             raise ValueError(

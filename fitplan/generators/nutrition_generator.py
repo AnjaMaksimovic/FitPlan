@@ -47,7 +47,7 @@ def nutrition_generator(metamodel, model, output_path, overwrite, debug, **kwarg
 
     fitplan_model, warnings = parse_model(input_file)
     if fitplan_model is None:
-        return
+        raise click.ClickException('Invalid FitPlan input; no output generated.')
 
     declarations = fitplan_model.declarations
     custom_ingredients = [d for d in declarations if d.__class__.__name__ == 'Ingredient']
@@ -104,7 +104,7 @@ def nutrition_generator(metamodel, model, output_path, overwrite, debug, **kwarg
     avg = {k: v / num_days for k, v in week_total.items()}
 
     html = f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Nutrition Report — {plan.name}</title>
 <style>
 *{{box-sizing:border-box;margin:0;padding:0}}
@@ -126,6 +126,8 @@ tr:hover td{{background:#f0fff4}}.day-col{{font-weight:600;color:#276749}}
 .legend{{background:white;border-radius:10px;padding:1rem 1.5rem;box-shadow:0 2px 6px rgba(0,0,0,.06);font-size:.85rem;color:#4a5568}}
 .legend span{{margin-right:1.5rem}}
 .footer{{margin-top:2rem;color:#a0aec0;font-size:.8rem;text-align:center}}
+.table-scroll{{overflow-x:auto}}
+@media(max-width:600px){{body{{padding:1rem}}.targets-grid{{grid-template-columns:repeat(2,1fr)}}}}
 </style></head><body>
 <h1>📊 Nutrition Report</h1>
 <p class="subtitle">Plan: <strong>{plan.name}</strong> · Generated: {datetime.now().strftime('%d.%m.%Y %H:%M')}</p>
@@ -136,10 +138,10 @@ tr:hover td{{background:#f0fff4}}.day-col{{font-weight:600;color:#276749}}
 <div class="target-box carbs"><div class="target-value">{target_carbs_g:.0f}g</div><div class="target-label">Carbs ({plan.carbs_pct}%)</div></div>
 <div class="target-box fat"><div class="target-value">{target_fat_g:.0f}g</div><div class="target-label">Fat ({plan.fat_pct}%)</div></div>
 </div>
-<table><thead><tr><th>Day</th><th>Calories</th><th>Diff</th><th>Net (after workout)</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Fiber</th><th>Workout</th></tr></thead>
+<div class="table-scroll"><table><thead><tr><th>Day</th><th>Calories</th><th>Diff (intake − target)</th><th>Net (after workout)</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Fiber</th><th>Workout</th></tr></thead>
 <tbody>{rows_html}
 <tr class="avg-row"><td>Average/day</td><td>{avg['calories']:.0f} kcal</td><td>—</td><td>—</td><td>{avg['protein']:.1f}g</td><td>{avg['carbs']:.1f}g</td><td>{avg['fat']:.1f}g</td><td>{avg['fiber']:.1f}g</td><td>—</td></tr>
-</tbody></table>
+</tbody></table></div>
 <div class="legend"><span>✅ On target (±10%)</span><span>⬇️ Below target</span><span>⬆️ Above target</span></div>
 <p class="footer">FitPlan DSL · {datetime.now().strftime('%Y')}</p>
 </body></html>"""
