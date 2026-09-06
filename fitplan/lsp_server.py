@@ -28,6 +28,7 @@ from lsprotocol.types import (
     MarkupContent,
     MarkupKind,
     Position,
+    PublishDiagnosticsParams,
     Range,
 )
 
@@ -202,6 +203,13 @@ HOVER_DOCS = {
     "yoga": "**yoga** — MET values: low=2.5, medium=3.0, high=4.0\n\nExample (70kg, 45min, low): **131 kcal**",
     "cycling": "**cycling** — MET values: low=4.0, medium=6.8, high=10.0\n\nExample (70kg, 45min, medium): **357 kcal**",
     "hiit": "**hiit** — MET values: low=6.0, medium=8.0, high=12.0\n\nExample (70kg, 30min, high): **420 kcal**",
+    "swimming": "**swimming** — MET values: low=5.8, medium=7.0, high=9.8\n\nExample (70kg, 30min, medium): **245 kcal**",
+    "pilates": "**pilates** — MET values: low=3.0, medium=4.0, high=5.0\n\nExample (70kg, 45min, medium): **210 kcal**",
+    "walking": "**walking** — MET values: low=2.5, medium=3.5, high=5.0\n\nExample (70kg, 60min, medium): **245 kcal**",
+    "rowing": "**rowing** — MET values: low=4.8, medium=7.0, high=8.5\n\nExample (70kg, 60min, low): **336 kcal**",
+    "elliptical": "**elliptical** — MET values: low=4.6, medium=5.0, high=6.3\n\nExample (70kg, 30min, medium): **175 kcal**",
+    "hiking": "**hiking** — MET values: low=5.3, medium=6.0, high=7.8\n\nExample (70kg, 60min, medium): **420 kcal**",
+    "other": "**other** — MET values: low=3.5, medium=5.0, high=7.0\n\nExample (70kg, 30min, medium): **175 kcal**",
     "no_repeat_same_day": "**no_repeat_same_day** — Filter that prevents using the same protein source for lunch and dinner on the same day.\n\nExample: if lunch has ChickenWithBroccoli (meat), dinner will not be another meat dish.",
     "max_per_week": "**max_per_week** — Filter that limits how many times a recipe appears in the weekly plan.\n\nUsage: `max_per_week RecipeName 3`",
     "ChickenBreast": "**ChickenBreast** (built-in) — 165 kcal | 31g protein | 0g carbs | 3.6g fat per 100g\n\nCategory: meat",
@@ -254,8 +262,23 @@ def hover(params: HoverParams):
 # DIAGNOSTICS
 # =====================================================================
 
+def _origin_range(line: Optional[int], col: Optional[int]) -> Range:
+    """Builds a Range from textX's 1-based line/col, falling back to file start."""
+    if line is None or col is None:
+        return Range(
+            start=Position(line=0, character=0),
+            end=Position(line=0, character=1)
+        )
+    position = Position(line=line - 1, character=max(col - 1, 0))
+    return Range(start=position, end=Position(line=position.line, character=position.character + 1))
+
+
 def validate_document(source: str) -> list:
     """Parses and validates .fitplan source, returns list of Diagnostic."""
+    from textx.exceptions import TextXSemanticError, TextXSyntaxError
+    from fitplan.main import get_mm
+    from fitplan.validators import run_all_validations
+
     diagnostics = []
 
     with tempfile.NamedTemporaryFile(
@@ -265,43 +288,47 @@ def validate_document(source: str) -> list:
         tmp_path = tmp.name
 
     try:
-        from .main import parse_model
-        model, warnings = parse_model(tmp_path)
-
-        if model is None:
+        mm = get_mm()
+        try:
+            model = mm.model_from_file(tmp_path)
+        except (TextXSyntaxError, TextXSemanticError) as e:
             diagnostics.append(
                 Diagnostic(
-                    range=Range(
-                        start=Position(line=0, character=0),
-                        end=Position(line=0, character=1)
-                    ),
-                    message="Syntax or validation error — check the file for issues.",
+                    range=_origin_range(e.line, e.col),
+                    message=e.message,
                     severity=DiagnosticSeverity.Error,
                     source="fitplan"
                 )
             )
+            return diagnostics
 
-        if warnings:
-            for w in warnings:
-                diagnostics.append(
-                    Diagnostic(
-                        range=Range(
-                            start=Position(line=0, character=0),
-                            end=Position(line=0, character=1)
-                        ),
-                        message=w,
-                        severity=DiagnosticSeverity.Warning,
-                        source="fitplan"
-                    )
+        try:
+            warnings = run_all_validations(model)
+        except ValueError as e:
+            diagnostics.append(
+                Diagnostic(
+                    range=_origin_range(None, None),
+                    message=str(e),
+                    severity=DiagnosticSeverity.Error,
+                    source="fitplan"
                 )
+            )
+            return diagnostics
+
+        for w in warnings:
+            diagnostics.append(
+                Diagnostic(
+                    range=_origin_range(None, None),
+                    message=w,
+                    severity=DiagnosticSeverity.Warning,
+                    source="fitplan"
+                )
+            )
 
     except Exception as e:
         diagnostics.append(
             Diagnostic(
-                range=Range(
-                    start=Position(line=0, character=0),
-                    end=Position(line=0, character=1)
-                ),
+                range=_origin_range(None, None),
                 message=str(e),
                 severity=DiagnosticSeverity.Error,
                 source="fitplan"
@@ -319,7 +346,7 @@ def did_open(params: DidOpenTextDocumentParams):
     if doc:
         diagnostics = validate_document(doc.source)
         server.text_document_publish_diagnostics(
-            params.text_document.uri, diagnostics
+            PublishDiagnosticsParams(uri=params.text_document.uri, diagnostics=diagnostics)
         )
 
 
@@ -329,7 +356,7 @@ def did_change(params: DidChangeTextDocumentParams):
     if doc:
         diagnostics = validate_document(doc.source)
         server.text_document_publish_diagnostics(
-            params.text_document.uri, diagnostics
+            PublishDiagnosticsParams(uri=params.text_document.uri, diagnostics=diagnostics)
         )
 
 if __name__ == "__main__":

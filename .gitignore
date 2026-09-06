@@ -14,3 +14,4 @@ examples/test_*.fitplan
 vscode-extension/node_modules/
 vscode-extension/out/
 vscode-extension/*.vsix
+demo_output/

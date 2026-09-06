@@ -44,7 +44,7 @@ def shopping_generator(metamodel, model, output_path, overwrite, debug, **kwargs
 
     fitplan_model, warnings = parse_model(input_file)
     if fitplan_model is None:
-        return
+        raise click.ClickException('Invalid FitPlan input; no output generated.')
 
     declarations = fitplan_model.declarations
     custom_ingredients = [d for d in declarations if d.__class__.__name__ == 'Ingredient']
@@ -63,6 +63,8 @@ def shopping_generator(metamodel, model, output_path, overwrite, debug, **kwargs
     by_category = {}
     for name, data in shopping.items():
         cat = data['data'].get('category', 'other') if data['data'] else 'other'
+        if cat not in CATEGORY_NAMES:
+            cat = 'other'
         if cat not in by_category:
             by_category[cat] = []
         allergens = data['data'].get('allergens', []) if data['data'] else []
