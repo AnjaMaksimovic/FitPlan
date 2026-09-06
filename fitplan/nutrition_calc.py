@@ -26,26 +26,34 @@ def amount_in_grams(amount, unit):
 def resolve_ingredient(name, custom_ingredients):
     """
     Resolves an ingredient by name.
-    Search order: custom definitions -> built-in database.
+    Search order: custom definitions -> built-in database -> API/cache.
     Returns dict with nutritional values or None.
     """
     # Check custom ingredients first
     for ing in custom_ingredients:
         if ing.name == name:
-            return {
+            reference = amount_in_grams(ing.amount, ing.unit)
+            if reference <= 0:
+                raise ValueError(f"Ingredient '{name}': reference amount must be positive")
+            data = {
                 "calories": ing.calories,
                 "protein": ing.protein,
                 "carbs": ing.carbs,
                 "fat": ing.fat,
                 "fiber": getattr(ing, "fiber", 0) or 0,
                 "category": getattr(ing, "category", "other") or "other",
+                "allergens": list(getattr(ing, "allergens", []) or []),
             }
+            for nutrient in ('calories', 'protein', 'carbs', 'fat', 'fiber'):
+                data[nutrient] *= 100 / reference
+            return data
 
     # Fall back to built-in database
     if name in BUILTIN_INGREDIENTS:
         return BUILTIN_INGREDIENTS[name].copy()
 
-    return None
+    from .ingredient_api import fetch_ingredient_from_api
+    return fetch_ingredient_from_api(name)
 
 
 def calc_nutrition_for_recipe(recipe, custom_ingredients, servings=1):
@@ -59,7 +67,7 @@ def calc_nutrition_for_recipe(recipe, custom_ingredients, servings=1):
     for item in recipe.items:
         ing_data = resolve_ingredient(item.ingredient, custom_ingredients)
         if not ing_data:
-            continue
+            raise ValueError(f"Ingredient '{item.ingredient}': nutritional data unavailable")
 
         # Convert to grams and scale from per-100g
         factor = amount_in_grams(item.amount, item.unit) / 100.0

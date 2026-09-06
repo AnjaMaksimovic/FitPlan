@@ -40,7 +40,14 @@
           "description": "Path to Python interpreter for LSP server"
         }
       }
-    }
+    },
+    "keybindings": [
+      {
+        "command": "editor.action.triggerSuggest",
+        "key": "ctrl+space",
+        "when": "editorTextFocus && editorLangId == fitplan"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
